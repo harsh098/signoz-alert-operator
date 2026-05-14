@@ -46,7 +46,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -110,7 +110,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -176,7 +176,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -246,7 +246,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -314,7 +314,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -378,7 +378,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -439,7 +439,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -500,7 +500,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -570,7 +570,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -640,7 +640,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -710,7 +710,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -780,7 +780,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -850,7 +850,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -920,7 +920,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -981,7 +981,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -1042,7 +1042,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -1113,7 +1113,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -1177,7 +1177,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -1247,7 +1247,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -1311,7 +1311,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -1375,7 +1375,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {
@@ -1445,7 +1445,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func main() {

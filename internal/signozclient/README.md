@@ -16,7 +16,7 @@ For more information, please visit [https://signoz.io](https://signoz.io)
 Import the package in a go file in your project and run `go mod tidy`:
 
 ```go
-import signozclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+import signozclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 ```
 
 To use a proxy, set the environment variable `HTTP_PROXY`:

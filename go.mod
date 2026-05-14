@@ -1,4 +1,4 @@
-module github.com/harsh098/signoz-operator
+module github.com/harsh098/signoz-alert-operator
 
 go 1.25.7
 

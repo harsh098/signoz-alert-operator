@@ -30,7 +30,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/harsh098/signoz-operator/test/utils"
+	"github.com/harsh098/signoz-alert-operator/test/utils"
 )
 
 // namespace where the project is deployed in

@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
 
 func Test_signozclient_ZeusAPIService(t *testing.T) {

@@ -35,8 +35,8 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	monitoringv1alpha1 "github.com/harsh098/signoz-operator/api/v1alpha1"
-	"github.com/harsh098/signoz-operator/internal/controller"
+	monitoringv1alpha1 "github.com/harsh098/signoz-alert-operator/api/v1alpha1"
+	"github.com/harsh098/signoz-alert-operator/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
 

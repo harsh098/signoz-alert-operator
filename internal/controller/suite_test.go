@@ -33,7 +33,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	monitoringv1alpha1 "github.com/harsh098/signoz-operator/api/v1alpha1"
+	monitoringv1alpha1 "github.com/harsh098/signoz-alert-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

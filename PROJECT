@@ -7,7 +7,7 @@ domain: operations.signoz.io
 layout:
 - go.kubebuilder.io/v4
 projectName: signoz-alert-operator
-repo: github.com/harsh098/signoz-operator
+repo: github.com/harsh098/signoz-alert-operator
 resources:
 - api:
     crdVersion: v1
@@ -15,7 +15,7 @@ resources:
   domain: operations.signoz.io
   group: monitoring
   kind: Endpoint
-  path: github.com/harsh098/signoz-operator/api/v1alpha1
+  path: github.com/harsh098/signoz-alert-operator/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -24,6 +24,6 @@ resources:
   domain: operations.signoz.io
   group: monitoring
   kind: Alert
-  path: github.com/harsh098/signoz-operator/api/v1alpha1
+  path: github.com/harsh098/signoz-alert-operator/api/v1alpha1
   version: v1alpha1
 version: "3"

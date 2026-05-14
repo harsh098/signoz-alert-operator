@@ -17,7 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	signoz "github.com/harsh098/signoz-operator/internal/signozclient"
+	signoz "github.com/harsh098/signoz-alert-operator/internal/signozclient"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

@@ -27,7 +27,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	monitoringv1alpha1 "github.com/harsh098/signoz-operator/api/v1alpha1"
+	monitoringv1alpha1 "github.com/harsh098/signoz-alert-operator/api/v1alpha1"
 )
 
 var _ = Describe("Alert Controller", func() {

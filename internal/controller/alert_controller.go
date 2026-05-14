@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	monitoringv1alpha1 "github.com/harsh098/signoz-operator/api/v1alpha1"
+	monitoringv1alpha1 "github.com/harsh098/signoz-alert-operator/api/v1alpha1"
 )
 
 // AlertReconciler reconciles a Alert object
