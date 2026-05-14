@@ -1,0 +1,24 @@
+# oapi-codegen config for the SigNoz API client.
+#
+# Regenerate after editing the vendored spec or the include list:
+#   make generate-client
+#
+# Scope: this config intentionally generates a NARROW client covering only the
+# rule CRUD operations the controller needs. Generating the full SigNoz API
+# pulls in upstream spec bugs (duplicate camelCase/snake_case properties on
+# unrelated schemas) and bloats compile times. When new features land
+# (e.g. dashboards), add their operationIds to `include-operation-ids` below.
+package: signozclient
+output: internal/signozclient/zz_generated.go
+generate:
+  models: true
+  client: true
+  embedded-spec: false
+output-options:
+  skip-prune: false
+  include-operation-ids:
+    - ListRules
+    - CreateRule
+    - GetRuleByID
+    - UpdateRuleByID
+    - DeleteRuleByID
