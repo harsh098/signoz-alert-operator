@@ -1,0 +1,26 @@
+apiVersion: monitoring.operations.signoz.io/v1alpha1
+kind: Endpoint
+metadata:
+  labels:
+    app.kubernetes.io/name: signoz-alert-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: endpoint-sample
+spec:
+  # Base URL of the SigNoz instance. Must match ^https?://.+ .
+  # Self-hosted example:   https://signoz.platform.example.com
+  # SigNoz Cloud example:  https://ingest.us.signoz.cloud:443
+  ingestionURL: https://signoz.platform.example.com
+
+  # apiKey is a reference to a Secret in the same namespace holding the
+  # SigNoz API key. The controller reads `data[<key>]` and sends it as the
+  # SigNoz-Api-Key header on every request.
+  #
+  # Create the backing Secret out of band, e.g.:
+  #   kubectl -n <ns> create secret generic signoz-api-key \
+  #     --from-literal=key='sigsec_xxxxxxxxxxxxxxxxxxxx'
+  #
+  # Omit this field entirely for unauthenticated self-hosted deployments
+  # that don't require an API key.
+  apiKey:
+    name: signoz-api-key
+    key: key

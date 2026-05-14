@@ -1,0 +1,83 @@
+apiVersion: monitoring.operations.signoz.io/v1alpha1
+kind: Alert
+metadata:
+  labels:
+    app.kubernetes.io/name: signoz-alert-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: alert-sample
+spec:
+  # endpointRef.name is the name of an Endpoint CR in the same namespace
+  # that points at the SigNoz instance this Alert is registered against.
+  endpointRef:
+    name: endpoint-sample
+
+  # `rule` mirrors the body of POST /api/v2/rules (RuletypesPostableRule).
+  # Schema reference:
+  #   https://signoz.io/api-reference/v0.122.0#/operations/CreateRule
+  rule:
+    # Required: human-readable name, alert classification, rule engine.
+    alert: High HTTP 5xx rate on frontend
+    alertType: METRIC_BASED_ALERT
+    ruleType: threshold_rule
+
+    description: |
+      Frontend service emitted more than 5% HTTP 5xx responses over the last
+      5 minutes (averaged across all replicas).
+
+    # Free-form labels and annotations passed through to SigNoz / Alertmanager.
+    # Keys under signoz-operator.monitoring.operations.signoz.io/ are reserved
+    # for the operator and will be rejected at admission time.
+    labels:
+      severity: warning
+      team: platform
+      service: frontend
+    annotations:
+      summary: Elevated HTTP 5xx rate on frontend
+      runbook_url: https://runbooks.example.com/frontend-5xx
+
+    # Evaluation envelope. `kind: rolling` evaluates over a sliding window;
+    # use `kind: cumulative` with a `schedule` for hourly/daily/weekly bins.
+    evaluation:
+      kind: rolling
+      spec:
+        evalWindow: 5m0s
+        frequency: 1m0s
+
+    # The query that produces the series to threshold against.
+    condition:
+      compositeQuery:
+        queryType: clickhouse_sql
+        panelType: graph
+        queries:
+          - type: clickhouse_sql
+            spec:
+              name: A
+              query: |
+                SELECT
+                  toStartOfMinute(timestamp) AS ts,
+                  countIf(status_code >= 500) / count() * 100 AS value
+                FROM signoz_logs.distributed_logs
+                WHERE service_name = 'frontend'
+                  AND timestamp >= now() - INTERVAL 5 MINUTE
+                GROUP BY ts
+                ORDER BY ts
+
+      # Named thresholds — each fires its own notification when crossed.
+      # `name` doubles as the severity label that downstream routes can key on.
+      thresholds:
+        kind: basic
+        spec:
+          - name: warning
+            matchType: at_least_once
+            op: above
+            target: 5
+            targetUnit: percent
+          - name: critical
+            matchType: at_least_once
+            op: above
+            target: 20
+            targetUnit: percent
+
+    # Channels are referenced by SigNoz channel name. Leave empty to fall back
+    # to the SigNoz default routing policy.
+    preferredChannels: []
