@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-  name: endpoints.monitoring.ops.signoz.io
+  name: endpoints.monitoring.hmx86.cloud
 spec:
-  group: monitoring.ops.signoz.io
+  group: monitoring.hmx86.cloud
   names:
     kind: Endpoint
     listKind: EndpointList

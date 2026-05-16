@@ -1,7 +1,7 @@
 # This rule is not used by the project signoz-alert-operator itself.
 # It is provided to allow the cluster admin to help manage permissions for users.
 #
-# Grants full permissions ('*') over monitoring.ops.signoz.io.
+# Grants full permissions ('*') over monitoring.hmx86.cloud.
 # This role is intended for users authorized to modify roles and bindings within the cluster,
 # enabling them to delegate specific permissions to other users or groups as needed.
 
@@ -14,13 +14,13 @@ metadata:
   name: endpoint-admin-role
 rules:
 - apiGroups:
-  - monitoring.ops.signoz.io
+  - monitoring.hmx86.cloud
   resources:
   - endpoints
   verbs:
   - '*'
 - apiGroups:
-  - monitoring.ops.signoz.io
+  - monitoring.hmx86.cloud
   resources:
   - endpoints/status
   verbs:

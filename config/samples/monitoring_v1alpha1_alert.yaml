@@ -1,4 +1,4 @@
-apiVersion: monitoring.ops.signoz.io/v1alpha1
+apiVersion: monitoring.hmx86.cloud/v1alpha1
 kind: Alert
 metadata:
   labels:

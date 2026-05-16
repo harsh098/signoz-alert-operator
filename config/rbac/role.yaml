@@ -5,7 +5,15 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - monitoring.ops.signoz.io
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - monitoring.hmx86.cloud
   resources:
   - alerts
   verbs:
@@ -17,16 +25,24 @@ rules:
   - update
   - watch
 - apiGroups:
-  - monitoring.ops.signoz.io
+  - monitoring.hmx86.cloud
   resources:
   - alerts/finalizers
   verbs:
   - update
 - apiGroups:
-  - monitoring.ops.signoz.io
+  - monitoring.hmx86.cloud
   resources:
   - alerts/status
   verbs:
   - get
   - patch
   - update
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch

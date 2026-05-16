@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-  name: alerts.monitoring.ops.signoz.io
+  name: alerts.monitoring.hmx86.cloud
 spec:
-  group: monitoring.ops.signoz.io
+  group: monitoring.hmx86.cloud
   names:
     kind: Alert
     listKind: AlertList
@@ -59,6 +59,8 @@ spec:
                   Rule is the SigNoz alert rule body (matches RuletypesPostableRule from
                   the SigNoz API). Schema-validated server-side only at the top level —
                   contents are forwarded verbatim to SigNoz.
+                  The current controller is wire compatible with
+                  https://signoz.io/api-reference/v0.122.0#/operations/CreateRule
                 x-kubernetes-preserve-unknown-fields: true
             required:
             - endpointRef

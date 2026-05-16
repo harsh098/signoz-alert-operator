@@ -1,0 +1,59 @@
+signoz-alert-operator
+Copyright 2026 Harsh Mishra
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes or is built on software developed by third parties,
+listed below with their respective licenses and required attributions.
+
+------------------------------------------------------------------------------
+SigNoz OpenAPI specification
+------------------------------------------------------------------------------
+
+The file `hack/signoz-openapi.yaml` is vendored from the SigNoz open-source
+project (https://github.com/SigNoz/signoz) and is used to generate the API
+client in `internal/signozclient/`. The specification is licensed under the
+Apache License, Version 2.0, copyright SigNoz Inc.
+
+This project is an independent community operator for managing SigNoz alert
+rules declaratively from Kubernetes. It is NOT affiliated with, endorsed by,
+or sponsored by SigNoz Inc. "SigNoz" is a trademark of SigNoz Inc., used here
+for descriptive purposes only.
+
+------------------------------------------------------------------------------
+oapi-codegen
+------------------------------------------------------------------------------
+
+https://github.com/oapi-codegen/oapi-codegen
+Copyright the oapi-codegen authors.
+Licensed under the Apache License, Version 2.0.
+
+Used at build time to generate `internal/signozclient/zz_generated.go` from
+`hack/signoz-openapi.yaml`. The generated code links against
+`github.com/oapi-codegen/runtime` at runtime.
+
+------------------------------------------------------------------------------
+Kubebuilder / Operator SDK / controller-runtime
+------------------------------------------------------------------------------
+
+https://github.com/kubernetes-sigs/controller-runtime
+https://github.com/kubernetes-sigs/controller-tools
+https://github.com/kubernetes-sigs/kubebuilder
+https://github.com/operator-framework/operator-sdk
+
+Copyright the Kubernetes Authors and the Operator Framework Authors.
+Licensed under the Apache License, Version 2.0.
+
+Project layout, RBAC scaffolding, envtest harness, manifest generation, and
+controller runtime are derived from these projects.
+
+------------------------------------------------------------------------------
+Other dependencies
+------------------------------------------------------------------------------
+
+Additional Go module dependencies (see `go.mod` and `go.sum`) are licensed
+under terms compatible with the Apache License, Version 2.0 — primarily
+Apache-2.0, MIT, and BSD-3-Clause. Individual license texts are distributed
+with each module in `$GOPATH/pkg/mod/...` when fetched. No NOTICE files from
+those modules require reproduction here at the time of writing; this file
+should be reviewed when dependencies are upgraded.

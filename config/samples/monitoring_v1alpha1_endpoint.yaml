@@ -11,7 +11,7 @@ stringData:
   # for the rules API (POST/PUT/DELETE /api/v2/rules).
   api-key: REPLACE_ME
 ---
-apiVersion: monitoring.ops.signoz.io/v1alpha1
+apiVersion: monitoring.hmx86.cloud/v1alpha1
 kind: Endpoint
 metadata:
   labels:

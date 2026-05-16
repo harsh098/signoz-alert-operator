@@ -1,3 +1,26 @@
+# ---------------------------------------------------------------------------
+# Vendored from the SigNoz open-source project.
+#
+#   Source:    https://github.com/SigNoz/signoz/blob/v0.122.0/docs/api/openapi.yml
+#   Upstream:  https://github.com/SigNoz/signoz
+#   Version:   SigNoz v0.122.0
+#   Retrieved: 2026-05-14
+#   License:   Apache License, Version 2.0
+#              http://www.apache.org/licenses/LICENSE-2.0
+#   Copyright: SigNoz Inc.
+#
+# This file is included verbatim and is not modified by this project. It is
+# consumed by oapi-codegen (see hack/signoz-openapi-cfg.yaml) to generate a
+# narrowly-scoped Go client at internal/signozclient/zz_generated.go.
+#
+# The signoz-alert-operator project is an independent community project and
+# is not affiliated with, endorsed by, or sponsored by SigNoz Inc.
+# "SigNoz" is a trademark of SigNoz Inc.
+#
+# To refresh: replace this file with the latest upstream copy, update the
+# Source/Version/Retrieved fields above, and re-run `make generate-client`.
+# Check for new include-operation-ids candidates if scope expands.
+# ---------------------------------------------------------------------------
 components:
   schemas:
     AlertmanagertypesChannel:
