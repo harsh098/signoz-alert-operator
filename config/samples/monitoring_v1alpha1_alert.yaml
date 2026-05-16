@@ -4,6 +4,37 @@ metadata:
   labels:
     app.kubernetes.io/name: signoz-alert-operator
     app.kubernetes.io/managed-by: kustomize
-  name: alert-sample
+  name: payments-api-error-rate
 spec:
-  # TODO(user): Add fields here
+  endpointRef:
+    name: signoz-prod              # Endpoint CR in the same namespace
+  rule:                            # forwarded verbatim to SigNoz POST /api/v2/rules
+    alert: Payments-api error log rate above 1%
+    alertType: LOGS_BASED_ALERT
+    ruleType: threshold_rule
+    description: Error log rate above 1% for payments-api
+    annotations:
+      summary: "Payments-api error rate above {{$threshold}}%"
+      description: "Error log rate in {{$deployment.environment}} is {{$value}}%"
+    labels:
+      severity: warning
+      team: payments
+      # k8s_id is injected by the controller — do NOT set it yourself
+    condition:
+      compositeQuery:
+        panelType: graph
+        queries:
+          - type: builder_query
+            spec:
+              name: A
+              signal: logs
+              aggregations:
+                - expression: count()
+              filter:
+                expression: "service.name = 'payments-api' AND severity_text IN ['ERROR','FATAL']"
+              stepInterval: 60
+      op: above
+      target: 1
+      matchType: at_least_once
+    evalWindow: 5m
+    frequency: 1m

@@ -1,9 +1,27 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: signoz-prod-credentials
+  labels:
+    app.kubernetes.io/name: signoz-alert-operator
+    app.kubernetes.io/managed-by: kustomize
+type: Opaque
+stringData:
+  # Replace with your real SigNoz API key. Token must have at least EDITOR scope
+  # for the rules API (POST/PUT/DELETE /api/v2/rules).
+  api-key: REPLACE_ME
+---
 apiVersion: monitoring.ops.signoz.io/v1alpha1
 kind: Endpoint
 metadata:
   labels:
     app.kubernetes.io/name: signoz-alert-operator
     app.kubernetes.io/managed-by: kustomize
-  name: endpoint-sample
+  name: signoz-prod
 spec:
-  # TODO(user): Add fields here
+  # https://<your-tenant>.signoz.cloud  for SigNoz Cloud,
+  # or http://signoz-frontend.signoz-system.svc.cluster.local:8080 for self-hosted.
+  instanceURL: https://example.signoz.cloud
+  secretKeyRef:
+    name: signoz-prod-credentials
+    key: api-key

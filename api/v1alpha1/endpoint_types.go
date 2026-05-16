@@ -20,23 +20,38 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// SecretRefSpec defines the reference to the
+// kubernetes secret and the key needed to
+// provide API Key for Signoz Cloud to the
+// Operator.
+type SecretKeyRefSpec struct {
+	// Name of Secret containing the API Key
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+
+	// Key within the Secret's data storing the required
+	// API Key
+	// +kubebuilder:validation:MinLength=1
+	Key string `json:"key"`
+}
 
 // EndpointSpec defines the desired state of Endpoint.
 type EndpointSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of Endpoint. Edit endpoint_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// InstanceURL is the URL Endpoint starting with http:// or https:// for
+	// the self-hosted or Signoz Cloud Instance.
+	// +kubebuilder:validation:Required
+	// +operator-sdk:csv:customresourcedefinitions:type=[spec,status],displayName="Signoz Instance URL"
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:XValidation:rule="isURL(self) && (url(self).getScheme() == 'http' || url(self).getScheme() == 'https')",message="instanceURL must be a valid http or https URL"
+	InstanceURL string `json:"instanceURL"`
+	// SecretRef is the reference to the secret containing the API Key for Signoz.
+	// Required if using Signoz Cloud.
+	// +kubebuilder:validation:Optional
+	SecretKeyRef *SecretKeyRefSpec `json:"secretKeyRef,omitempty"`
 }
 
 // EndpointStatus defines the observed state of Endpoint.
-type EndpointStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-}
+type EndpointStatus struct{}
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

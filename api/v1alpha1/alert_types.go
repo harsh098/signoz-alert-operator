@@ -18,24 +18,51 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// EndpointRefSpec stores reference to the
+// object of kind Endpoint in the same namespace
+// as the Alert
+type EndpointRefSpec struct {
+	// Name refers to the name of the kubernetes
+	// object of kind Endpoint in the same namespace
+	// as the Alert
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+}
 
 // AlertSpec defines the desired state of Alert.
 type AlertSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of Alert. Edit alert_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// EndpointRef holds reference to the kind Endpoint
+	// the points at the target Signoz Instance
+	// +kubebuilder:validation:Required
+	EndpointRef EndpointRefSpec `json:"endpointRef"`
+	// Rule is the SigNoz alert rule body (matches RuletypesPostableRule from
+	// the SigNoz API). Schema-validated server-side only at the top level —
+	// contents are forwarded verbatim to SigNoz.
+	// The current controller is wire compatible with
+	// https://signoz.io/api-reference/v0.122.0#/operations/CreateRule
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Required
+	Rule runtime.RawExtension `json:"rule"`
 }
 
 // AlertStatus defines the observed state of Alert.
 type AlertStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// RuleID is the SigNoz-assigned rule ID. Empty until first successful create.
+	// +optional
+	RuleID string `json:"ruleID,omitempty"`
+
+	// HTTPStatus is the HTTP status code from the most recent SigNoz API call.
+	// +optional
+	HTTPStatus int `json:"httpStatus,omitempty"`
+
+	// Errors is the response body from the most recent non-2xx SigNoz API call. Empty on success.
+	// +optional
+	Errors string `json:"errors,omitempty"`
 }
 
 // +kubebuilder:object:root=true
