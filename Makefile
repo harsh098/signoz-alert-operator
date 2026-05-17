@@ -132,6 +132,13 @@ SIGNOZ_COMPOSE_DIR ?= $(SIGNOZ_VENDOR_DIR)/deploy/docker
 
 # Fetch the SigNoz deploy/ tree at the pinned version. Cached by version tag —
 # bumping SIGNOZ_VERSION triggers a re-fetch. The directory is gitignored.
+#
+# Why the post-fetch prune: sparse-checkout cone mode keeps the repo's root
+# files (go.mod, go.sum, .golangci.yml, README*, LICENSE, etc.) in addition
+# to deploy/. We only need deploy/, and the leftover go.mod (which requires
+# Go 1.25.7) trips controller-gen's package loader in CI where setup-go pins
+# GOTOOLCHAIN=local with our project's Go 1.24. Locally it's masked because
+# the developer's Go is high enough.
 $(SIGNOZ_VENDOR_DIR)/.fetched-$(SIGNOZ_VERSION):
 	rm -rf $(SIGNOZ_VENDOR_DIR)
 	mkdir -p $(SIGNOZ_VENDOR_DIR)
@@ -140,6 +147,10 @@ $(SIGNOZ_VENDOR_DIR)/.fetched-$(SIGNOZ_VERSION):
 		https://github.com/SigNoz/signoz.git $(SIGNOZ_VENDOR_DIR)
 	cd $(SIGNOZ_VENDOR_DIR) && git sparse-checkout set deploy
 	rm -rf $(SIGNOZ_VENDOR_DIR)/.git
+	find $(SIGNOZ_VENDOR_DIR) -mindepth 1 -maxdepth 1 \
+		-not -name deploy \
+		-not -name '.fetched-*' \
+		-exec rm -rf {} +
 	touch $@
 
 .PHONY: signoz-up
