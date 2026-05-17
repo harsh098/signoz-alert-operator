@@ -23,14 +23,10 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Install the latest version of kind
+      - name: Install k3d
         run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-$(go env GOARCH)
-          chmod +x ./kind
-          sudo mv ./kind /usr/local/bin/kind
-
-      - name: Verify kind installation
-        run: kind version
+          curl -sSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+          k3d version
 
       - name: Running Test e2e
         run: |

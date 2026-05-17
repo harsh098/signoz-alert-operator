@@ -117,34 +117,77 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet setup-envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
-# TODO(user): To use a different vendor for e2e tests, modify the setup under 'tests/e2e'.
-# The default setup assumes Kind is pre-installed and builds/loads the Manager Docker image locally.
-# CertManager is installed by default; skip with:
-# - CERT_MANAGER_INSTALL_SKIP=true
-KIND_CLUSTER ?= signoz-alert-operator-test-e2e
+# e2e tests run against a k3d cluster (lightweight k3s in Docker) with a real
+# SigNoz instance brought up via docker-compose on the host. The operator pod
+# in k3d reaches the host SigNoz via the k3d-provided `host.k3d.internal` DNS
+# name. CertManager is installed by default; skip with:
+#   - CERT_MANAGER_INSTALL_SKIP=true
+K3D ?= k3d
+K3D_CLUSTER ?= signoz-alert-operator-test-e2e
+SIGNOZ_VERSION ?= v0.122.0
+SIGNOZ_VENDOR_DIR ?= test/e2e/signoz-vendor
+SIGNOZ_COMPOSE_DIR ?= $(SIGNOZ_VENDOR_DIR)/deploy/docker
+
+# Fetch the SigNoz deploy/ tree at the pinned version. Cached by version tag —
+# bumping SIGNOZ_VERSION triggers a re-fetch. The directory is gitignored.
+$(SIGNOZ_VENDOR_DIR)/.fetched-$(SIGNOZ_VERSION):
+	rm -rf $(SIGNOZ_VENDOR_DIR)
+	mkdir -p $(SIGNOZ_VENDOR_DIR)
+	@echo "Fetching SigNoz $(SIGNOZ_VERSION) deploy/ tree..."
+	git clone --depth 1 --branch $(SIGNOZ_VERSION) --filter=blob:none --sparse \
+		https://github.com/SigNoz/signoz.git $(SIGNOZ_VENDOR_DIR)
+	cd $(SIGNOZ_VENDOR_DIR) && git sparse-checkout set deploy
+	rm -rf $(SIGNOZ_VENDOR_DIR)/.git
+	touch $@
+
+.PHONY: signoz-up
+signoz-up: $(SIGNOZ_VENDOR_DIR)/.fetched-$(SIGNOZ_VERSION) ## Bring up SigNoz via docker-compose with the root-user override
+	cp test/e2e/signoz-override.yaml $(SIGNOZ_COMPOSE_DIR)/docker-compose.override.yaml
+	cd $(SIGNOZ_COMPOSE_DIR) && VERSION=$(SIGNOZ_VERSION) docker compose up -d
+	@echo "Waiting for SigNoz /api/v1/health..."
+	@for i in $$(seq 1 120); do \
+		if curl -sf http://localhost:8080/api/v1/health >/dev/null 2>&1; then \
+			echo "SigNoz is ready."; exit 0; \
+		fi; \
+		sleep 2; \
+	done; \
+	echo "SigNoz did not become healthy in 240s"; exit 1
+
+.PHONY: signoz-down
+signoz-down: ## Tear down SigNoz via docker-compose (does not delete volumes)
+	@if [ -d $(SIGNOZ_COMPOSE_DIR) ]; then \
+		cd $(SIGNOZ_COMPOSE_DIR) && VERSION=$(SIGNOZ_VERSION) docker compose down; \
+	fi
+
+.PHONY: signoz-down-volumes
+signoz-down-volumes: ## Tear down SigNoz and wipe all data volumes
+	@if [ -d $(SIGNOZ_COMPOSE_DIR) ]; then \
+		cd $(SIGNOZ_COMPOSE_DIR) && VERSION=$(SIGNOZ_VERSION) docker compose down -v; \
+	fi
 
 .PHONY: setup-test-e2e
-setup-test-e2e: ## Set up a Kind cluster for e2e tests if it does not exist
-	@command -v $(KIND) >/dev/null 2>&1 || { \
-		echo "Kind is not installed. Please install Kind manually."; \
+setup-test-e2e: signoz-up ## Create k3d cluster + bring up SigNoz docker-compose
+	@command -v $(K3D) >/dev/null 2>&1 || { \
+		echo "k3d is not installed. Install via 'curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash'."; \
 		exit 1; \
 	}
-	@case "$$($(KIND) get clusters)" in \
-		*"$(KIND_CLUSTER)"*) \
-			echo "Kind cluster '$(KIND_CLUSTER)' already exists. Skipping creation." ;; \
+	@case "$$($(K3D) cluster list -o json 2>/dev/null | grep '\"name\"' | grep $(K3D_CLUSTER))" in \
+		*"$(K3D_CLUSTER)"*) \
+			echo "k3d cluster '$(K3D_CLUSTER)' already exists. Skipping creation." ;; \
 		*) \
-			echo "Creating Kind cluster '$(KIND_CLUSTER)'..."; \
-			$(KIND) create cluster --name $(KIND_CLUSTER) ;; \
+			echo "Creating k3d cluster '$(K3D_CLUSTER)'..."; \
+			$(K3D) cluster create $(K3D_CLUSTER) --wait ;; \
 	esac
 
 .PHONY: test-e2e
-test-e2e: setup-test-e2e manifests generate fmt vet ## Run the e2e tests. Expected an isolated environment using Kind.
-	KIND_CLUSTER=$(KIND_CLUSTER) go test ./test/e2e/ -v -ginkgo.v
+test-e2e: setup-test-e2e manifests generate fmt vet ## Run the e2e tests against k3d + docker-compose SigNoz
+	K3D_CLUSTER=$(K3D_CLUSTER) SIGNOZ_BASE_URL=http://host.k3d.internal:8080 go test ./test/e2e/ -v -ginkgo.v
 	$(MAKE) cleanup-test-e2e
 
 .PHONY: cleanup-test-e2e
-cleanup-test-e2e: ## Tear down the Kind cluster used for e2e tests
-	@$(KIND) delete cluster --name $(KIND_CLUSTER)
+cleanup-test-e2e: ## Tear down the k3d cluster and SigNoz docker-compose
+	@$(K3D) cluster delete $(K3D_CLUSTER) || true
+	$(MAKE) signoz-down-volumes
 
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint linter
@@ -234,7 +277,6 @@ $(LOCALBIN):
 
 ## Tool Binaries
 KUBECTL ?= kubectl
-KIND ?= kind
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest

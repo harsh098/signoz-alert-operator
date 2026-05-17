@@ -173,6 +173,7 @@ func (r *AlertReconciler) resolveClient(ctx context.Context, alert *monitoringv1
 	}, &endpoint); err != nil {
 		return nil, fmt.Errorf("fetch endpoint %q: %w", alert.Spec.EndpointRef.Name, err)
 	}
+
 	if endpoint.Spec.SecretKeyRef == nil {
 		return nil, fmt.Errorf("endpoint %q has no secretKeyRef set", endpoint.Name)
 	}

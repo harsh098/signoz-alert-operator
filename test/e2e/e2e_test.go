@@ -19,6 +19,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -257,15 +258,239 @@ var _ = Describe("Manager", Ordered, func() {
 		})
 
 		// +kubebuilder:scaffold:e2e-webhooks-checks
+	})
 
-		// TODO: Customize the e2e test suite with scenarios specific to your project.
-		// Consider applying sample/CR(s) and check their status and/or verifying
-		// the reconciliation by using the metrics, i.e.:
-		// metricsOutput := getMetricsOutput()
-		// Expect(metricsOutput).To(ContainSubstring(
-		//    fmt.Sprintf(`controller_runtime_reconcile_total{controller="%s",result="success"} 1`,
-		//    strings.ToLower(<Kind>),
-		// ))
+	// ------------------------------------------------------------------------
+	// Alert lifecycle against a real SigNoz instance running in docker-compose
+	// on the host. The operator reaches it via host.k3d.internal:8080 (set by
+	// SIGNOZ_BASE_URL env from the Makefile).
+	//
+	// Auth flow (per test/e2e/signoz-override.yaml + utils.BootstrapSigNozAPIKey):
+	//   1. SigNoz starts with a known root user/org via env vars
+	//   2. BootstrapSigNozAPIKey logs in, mints a service-account API key
+	//   3. That key goes into a K8s Secret, referenced from the Endpoint CR
+	//
+	// All cleanup is wired via DeferCleanup so it runs in LIFO order even on
+	// panic, BeforeAll failure, or mid-spec abort. Finalizers are force-patched
+	// before delete so a broken reconcile never causes a finalizer hang.
+	// ------------------------------------------------------------------------
+	Context("Alert lifecycle against real SigNoz", func() {
+		const (
+			alertNS       = "signoz-alert-operator-e2e"
+			endpointName  = "signoz-prod"
+			alertName     = "e2e-canary"
+			channelName   = "e2e-null-webhook"
+			secretName    = "signoz-api-key"
+			secretKey     = "api-key"
+			adminEmail    = "admin@e2e.local"
+			adminPassword = "E2eAdmin#42Local!" //nolint:gosec // synthetic e2e credential matching test/e2e/signoz-override.yaml
+			adminOrgID    = "01923b8a-b8a8-7e88-a06a-2c5d7a44a3e1"
+		)
+		var (
+			apiKey string
+			ruleID string
+		)
+
+		BeforeAll(func() {
+			By("waiting for SigNoz to be healthy")
+			Expect(utils.WaitForSigNozReady(2 * time.Minute)).To(Succeed())
+
+			By("bootstrapping a SigNoz service-account API key (login → create SA → mint key)")
+			var err error
+			apiKey, err = utils.BootstrapSigNozAPIKey(adminEmail, adminPassword, adminOrgID)
+			Expect(err).NotTo(HaveOccurred(), "SigNoz auth bootstrap should succeed")
+			Expect(apiKey).NotTo(BeEmpty())
+
+			By("creating a notification channel (Alerts require at least one preferredChannel)")
+			// Unreachable URL — the rule never fires, so this never gets called.
+			Expect(utils.CreateSigNozWebhookChannel(apiKey, channelName, "http://127.0.0.1:1/null")).To(Succeed())
+
+			// Defensive cleanup. DeferCleanup runs LIFO regardless of how the
+			// suite exits — panic, BeforeAll failure, ctrl-C. Registered first
+			// so it teardowns AFTER any later DeferCleanup that adds resources.
+			DeferCleanup(func() {
+				if CurrentSpecReport().Failed() {
+					By("[diagnostic] kubectl get alert -o yaml")
+					if out, err := utils.Run(exec.Command("kubectl", "get", "alert", alertName,
+						"-n", alertNS, "-o", "yaml")); err == nil {
+						_, _ = fmt.Fprintf(GinkgoWriter, "Alert YAML:\n%s\n", out)
+					}
+					By("[diagnostic] operator pod logs")
+					if out, err := utils.Run(exec.Command("kubectl", "logs",
+						"-l", "control-plane=controller-manager",
+						"-n", namespace, "--tail=400")); err == nil {
+						_, _ = fmt.Fprintf(GinkgoWriter, "Operator logs:\n%s\n", out)
+					}
+				}
+
+				// Force-clear finalizers so kubectl delete never blocks.
+				_, _ = utils.Run(exec.Command("kubectl", "patch", "alert", alertName, "-n", alertNS,
+					"--type=merge", "-p", `{"metadata":{"finalizers":[]}}`))
+				_, _ = utils.Run(exec.Command("kubectl", "delete", "alert", alertName,
+					"-n", alertNS, "--ignore-not-found", "--wait=false"))
+				_, _ = utils.Run(exec.Command("kubectl", "delete", "endpoint.monitoring.hmx86.cloud",
+					endpointName, "-n", alertNS, "--ignore-not-found", "--wait=false"))
+				_, _ = utils.Run(exec.Command("kubectl", "delete", "secret", secretName,
+					"-n", alertNS, "--ignore-not-found", "--wait=false"))
+				_, _ = utils.Run(exec.Command("kubectl", "delete", "ns", alertNS,
+					"--ignore-not-found", "--wait=false"))
+			})
+
+			By(fmt.Sprintf("creating namespace %s", alertNS))
+			_, _ = utils.Run(exec.Command("kubectl", "create", "ns", alertNS))
+
+			By("creating Secret holding the SigNoz API key")
+			secretYAML := fmt.Sprintf(`
+apiVersion: v1
+kind: Secret
+metadata:
+  name: %s
+  namespace: %s
+type: Opaque
+stringData:
+  %s: %s
+`, secretName, alertNS, secretKey, apiKey)
+			secretFile := filepath.Join(os.TempDir(), "e2e-secret.yaml")
+			Expect(os.WriteFile(secretFile, []byte(secretYAML), 0o600)).To(Succeed())
+			_, err = utils.Run(exec.Command("kubectl", "apply", "-f", secretFile))
+			Expect(err).NotTo(HaveOccurred(), "Failed to apply Secret")
+
+			By("applying the Endpoint (with secretKeyRef → the bootstrapped key)")
+			endpointYAML := fmt.Sprintf(`
+apiVersion: monitoring.hmx86.cloud/v1alpha1
+kind: Endpoint
+metadata:
+  name: %s
+  namespace: %s
+spec:
+  instanceURL: %s
+  secretKeyRef:
+    name: %s
+    key: %s
+`, endpointName, alertNS, utils.SigNozBaseURL(), secretName, secretKey)
+			endpointFile := filepath.Join(os.TempDir(), "e2e-endpoint.yaml")
+			Expect(os.WriteFile(endpointFile, []byte(endpointYAML), 0o644)).To(Succeed())
+			_, err = utils.Run(exec.Command("kubectl", "apply", "-f", endpointFile))
+			Expect(err).NotTo(HaveOccurred(), "Failed to apply Endpoint")
+
+			By("applying the Alert")
+			// Spec.Rule shape mirrors a known-working production rule:
+			// fravity-analytics-layer/monitoring/aws/alerts/k8s-cdc-container-restarts.json.
+			// Notes on fields SigNoz actually requires (not all are documented):
+			//   - version: "v5"  — required by validation
+			//   - compositeQuery.queryType: "builder"  — required
+			//   - condition.selectedQueryName: matches a query.name  — required
+			//   - op / matchType use NUMERIC enum codes ("1" = above / at_least_once),
+			//     NOT the named enums in the OpenAPI spec ("above", "at_least_once").
+			// METRIC_BASED_ALERT picked because LOGS_BASED ingestion isn't running
+			// in the test compose stack. Aggregation references a metric that
+			// doesn't exist (k8s.e2e.never_matches) so the rule never fires.
+			alertYAML := fmt.Sprintf(`
+apiVersion: monitoring.hmx86.cloud/v1alpha1
+kind: Alert
+metadata:
+  name: %s
+  namespace: %s
+spec:
+  endpointRef:
+    name: %s
+  rule:
+    alert: e2e-canary
+    alertType: METRIC_BASED_ALERT
+    ruleType: threshold_rule
+    version: v5
+    description: "e2e canary alert (no data expected)"
+    labels:
+      severity: info
+    evalWindow: 5m
+    frequency: 1m
+    condition:
+      compositeQuery:
+        panelType: graph
+        queryType: builder
+        queries:
+          - type: builder_query
+            spec:
+              name: A
+              signal: metrics
+              stepInterval: 60
+              aggregations:
+                - metricName: k8s.e2e.never_matches
+                  timeAggregation: count
+                  spaceAggregation: sum
+      selectedQueryName: A
+      op: "1"
+      target: 0
+      matchType: "1"
+    preferredChannels:
+      - %s
+`, alertName, alertNS, endpointName, channelName)
+			alertFile := filepath.Join(os.TempDir(), "e2e-alert.yaml")
+			Expect(os.WriteFile(alertFile, []byte(alertYAML), 0o644)).To(Succeed())
+			_, err = utils.Run(exec.Command("kubectl", "apply", "-f", alertFile))
+			Expect(err).NotTo(HaveOccurred(), "Failed to apply Alert")
+		})
+
+		It("populates status.RuleID after the controller reconciles", func() {
+			By("waiting for status.RuleID to be populated")
+			Eventually(func(g Gomega) {
+				out, err := utils.Run(exec.Command("kubectl", "get", "alert", alertName,
+					"-n", alertNS, "-o", "jsonpath={.status.ruleID}"))
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(out).NotTo(BeEmpty(), "status.ruleID should be set")
+				ruleID = out
+			}, 2*time.Minute, 2*time.Second).Should(Succeed())
+		})
+
+		It("creates a corresponding rule in SigNoz with the right k8s_id label", func() {
+			Expect(ruleID).NotTo(BeEmpty(), "previous spec must have set ruleID")
+
+			By(fmt.Sprintf("GET %s/api/v2/rules/%s", utils.SigNozHostURL(), ruleID))
+			req, _ := http.NewRequest(http.MethodGet,
+				fmt.Sprintf("%s/api/v2/rules/%s", utils.SigNozHostURL(), ruleID), nil)
+			req.Header.Set("SigNoz-Api-Key", apiKey)
+			resp, err := http.DefaultClient.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+			defer func() { _ = resp.Body.Close() }()
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "rule should exist in SigNoz")
+
+			var got struct {
+				Data struct {
+					ID     string            `json:"id"`
+					Labels map[string]string `json:"labels"`
+				} `json:"data"`
+			}
+			Expect(json.NewDecoder(resp.Body).Decode(&got)).To(Succeed())
+			Expect(got.Data.ID).To(Equal(ruleID))
+			Expect(got.Data.Labels).To(HaveKeyWithValue("k8s_id", alertNS+"-"+alertName),
+				"controller must stamp k8s_id label for cross-cluster idempotency")
+		})
+
+		It("removes the rule from SigNoz when Alert is deleted (no finalizer hang)", func() {
+			Expect(ruleID).NotTo(BeEmpty())
+
+			// Strict 30s timeout — any longer means the operator's DELET path
+			// is broken and the finalizer-removal isn't running.
+			By("deleting the Alert with strict 30s --wait=true timeout (detects finalizer hangs)")
+			start := time.Now()
+			_, err := utils.Run(exec.Command("kubectl", "delete", "alert", alertName,
+				"-n", alertNS, "--wait=true", "--timeout=30s"))
+			elapsed := time.Since(start)
+			Expect(err).NotTo(HaveOccurred(), "Alert delete must not hang on finalizer")
+			Expect(elapsed).To(BeNumerically("<", 30*time.Second),
+				"delete must complete within 30s — finalizer cleanup is broken if it hangs")
+
+			By("verifying the rule is gone from SigNoz")
+			Eventually(func(g Gomega) {
+				req, _ := http.NewRequest(http.MethodGet,
+					fmt.Sprintf("%s/api/v2/rules/%s", utils.SigNozHostURL(), ruleID), nil)
+				req.Header.Set("SigNoz-Api-Key", apiKey)
+				resp, err := http.DefaultClient.Do(req)
+				g.Expect(err).NotTo(HaveOccurred())
+				_ = resp.Body.Close()
+				g.Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+			}, time.Minute, 2*time.Second).Should(Succeed())
+		})
 	})
 })
 

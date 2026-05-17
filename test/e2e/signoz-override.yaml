@@ -1,0 +1,18 @@
+# docker-compose override applied on top of the vendored SigNoz compose.
+# `make signoz-up` copies this into the vendored deploy/docker/ as
+# docker-compose.override.yaml — docker compose auto-merges it.
+#
+# Provisions a known root user + org at startup so the e2e bootstrap can log
+# in and mint a service-account API key without any UI interaction.
+# Docs: https://signoz.io/docs/manage/administrator-guide/configuration/root-user/
+services:
+  signoz:
+    environment:
+      - SIGNOZ_USER_ROOT_ENABLED=true
+      - SIGNOZ_USER_ROOT_EMAIL=admin@e2e.local
+      # Password meets typical complexity: >=12 chars, upper+lower+digit+special.
+      - SIGNOZ_USER_ROOT_PASSWORD=E2eAdmin#42Local!
+      - SIGNOZ_USER_ROOT_ORG_NAME=e2e
+      # Fixed UUIDv7 so the e2e harness knows the orgId for /sessions/email_password
+      # (which requires it). Regenerate if you change versions and the format drifts.
+      - SIGNOZ_USER_ROOT_ORG_ID=01923b8a-b8a8-7e88-a06a-2c5d7a44a3e1
