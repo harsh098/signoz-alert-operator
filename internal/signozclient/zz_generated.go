@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -588,14 +589,12 @@ type RuletypesCumulativeWindow struct {
 
 // RuletypesEvaluationCumulative defines model for RuletypesEvaluationCumulative.
 type RuletypesEvaluationCumulative struct {
-	Kind *RuletypesEvaluationKind   `json:"kind,omitempty"`
-	Spec *RuletypesCumulativeWindow `json:"spec,omitempty"`
+	Kind RuletypesEvaluationKind   `json:"kind"`
+	Spec RuletypesCumulativeWindow `json:"spec"`
 }
 
 // RuletypesEvaluationEnvelope defines model for RuletypesEvaluationEnvelope.
 type RuletypesEvaluationEnvelope struct {
-	Kind  RuletypesEvaluationKind `json:"kind"`
-	Spec  interface{}             `json:"spec"`
 	union json.RawMessage
 }
 
@@ -604,8 +603,8 @@ type RuletypesEvaluationKind string
 
 // RuletypesEvaluationRolling defines model for RuletypesEvaluationRolling.
 type RuletypesEvaluationRolling struct {
-	Kind *RuletypesEvaluationKind `json:"kind,omitempty"`
-	Spec *RuletypesRollingWindow  `json:"spec,omitempty"`
+	Kind RuletypesEvaluationKind `json:"kind"`
+	Spec RuletypesRollingWindow  `json:"spec"`
 }
 
 // RuletypesMatchType defines model for RuletypesMatchType.
@@ -703,8 +702,6 @@ type RuletypesRuleCondition struct {
 
 // RuletypesRuleThresholdData defines model for RuletypesRuleThresholdData.
 type RuletypesRuleThresholdData struct {
-	Kind  RuletypesThresholdKind `json:"kind"`
-	Spec  interface{}            `json:"spec"`
 	union json.RawMessage
 }
 
@@ -719,7 +716,7 @@ type RuletypesSeasonality string
 
 // RuletypesThresholdBasic defines model for RuletypesThresholdBasic.
 type RuletypesThresholdBasic struct {
-	Kind *RuletypesThresholdKind       `json:"kind,omitempty"`
+	Kind RuletypesThresholdKind        `json:"kind"`
 	Spec *RuletypesBasicRuleThresholds `json:"spec"`
 }
 
@@ -1065,6 +1062,7 @@ func (t RuletypesEvaluationEnvelope) AsRuletypesEvaluationRolling() (RuletypesEv
 
 // FromRuletypesEvaluationRolling overwrites any union data inside the RuletypesEvaluationEnvelope as the provided RuletypesEvaluationRolling
 func (t *RuletypesEvaluationEnvelope) FromRuletypesEvaluationRolling(v RuletypesEvaluationRolling) error {
+	v.Kind = "rolling"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -1072,6 +1070,7 @@ func (t *RuletypesEvaluationEnvelope) FromRuletypesEvaluationRolling(v Ruletypes
 
 // MergeRuletypesEvaluationRolling performs a merge with any union data inside the RuletypesEvaluationEnvelope, using the provided RuletypesEvaluationRolling
 func (t *RuletypesEvaluationEnvelope) MergeRuletypesEvaluationRolling(v RuletypesEvaluationRolling) error {
+	v.Kind = "rolling"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1091,6 +1090,7 @@ func (t RuletypesEvaluationEnvelope) AsRuletypesEvaluationCumulative() (Ruletype
 
 // FromRuletypesEvaluationCumulative overwrites any union data inside the RuletypesEvaluationEnvelope as the provided RuletypesEvaluationCumulative
 func (t *RuletypesEvaluationEnvelope) FromRuletypesEvaluationCumulative(v RuletypesEvaluationCumulative) error {
+	v.Kind = "cumulative"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -1098,6 +1098,7 @@ func (t *RuletypesEvaluationEnvelope) FromRuletypesEvaluationCumulative(v Rulety
 
 // MergeRuletypesEvaluationCumulative performs a merge with any union data inside the RuletypesEvaluationEnvelope, using the provided RuletypesEvaluationCumulative
 func (t *RuletypesEvaluationEnvelope) MergeRuletypesEvaluationCumulative(v RuletypesEvaluationCumulative) error {
+	v.Kind = "cumulative"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1108,58 +1109,36 @@ func (t *RuletypesEvaluationEnvelope) MergeRuletypesEvaluationCumulative(v Rulet
 	return err
 }
 
-func (t RuletypesEvaluationEnvelope) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
+func (t RuletypesEvaluationEnvelope) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"kind"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t RuletypesEvaluationEnvelope) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
 	if err != nil {
 		return nil, err
 	}
-	object := make(map[string]json.RawMessage)
-	if t.union != nil {
-		err = json.Unmarshal(b, &object)
-		if err != nil {
-			return nil, err
-		}
+	switch discriminator {
+	case "cumulative":
+		return t.AsRuletypesEvaluationCumulative()
+	case "rolling":
+		return t.AsRuletypesEvaluationRolling()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}
+}
 
-	object["kind"], err = json.Marshal(t.Kind)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'kind': %w", err)
-	}
-
-	object["spec"], err = json.Marshal(t.Spec)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'spec': %w", err)
-	}
-
-	b, err = json.Marshal(object)
+func (t RuletypesEvaluationEnvelope) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
 	return b, err
 }
 
 func (t *RuletypesEvaluationEnvelope) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
-	if err != nil {
-		return err
-	}
-	object := make(map[string]json.RawMessage)
-	err = json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["kind"]; found {
-		err = json.Unmarshal(raw, &t.Kind)
-		if err != nil {
-			return fmt.Errorf("error reading 'kind': %w", err)
-		}
-	}
-
-	if raw, found := object["spec"]; found {
-		err = json.Unmarshal(raw, &t.Spec)
-		if err != nil {
-			return fmt.Errorf("error reading 'spec': %w", err)
-		}
-	}
-
 	return err
 }
 
@@ -1172,6 +1151,7 @@ func (t RuletypesRuleThresholdData) AsRuletypesThresholdBasic() (RuletypesThresh
 
 // FromRuletypesThresholdBasic overwrites any union data inside the RuletypesRuleThresholdData as the provided RuletypesThresholdBasic
 func (t *RuletypesRuleThresholdData) FromRuletypesThresholdBasic(v RuletypesThresholdBasic) error {
+	v.Kind = "basic"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -1179,6 +1159,7 @@ func (t *RuletypesRuleThresholdData) FromRuletypesThresholdBasic(v RuletypesThre
 
 // MergeRuletypesThresholdBasic performs a merge with any union data inside the RuletypesRuleThresholdData, using the provided RuletypesThresholdBasic
 func (t *RuletypesRuleThresholdData) MergeRuletypesThresholdBasic(v RuletypesThresholdBasic) error {
+	v.Kind = "basic"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1189,58 +1170,34 @@ func (t *RuletypesRuleThresholdData) MergeRuletypesThresholdBasic(v RuletypesThr
 	return err
 }
 
-func (t RuletypesRuleThresholdData) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
+func (t RuletypesRuleThresholdData) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"kind"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t RuletypesRuleThresholdData) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
 	if err != nil {
 		return nil, err
 	}
-	object := make(map[string]json.RawMessage)
-	if t.union != nil {
-		err = json.Unmarshal(b, &object)
-		if err != nil {
-			return nil, err
-		}
+	switch discriminator {
+	case "basic":
+		return t.AsRuletypesThresholdBasic()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}
+}
 
-	object["kind"], err = json.Marshal(t.Kind)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'kind': %w", err)
-	}
-
-	object["spec"], err = json.Marshal(t.Spec)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'spec': %w", err)
-	}
-
-	b, err = json.Marshal(object)
+func (t RuletypesRuleThresholdData) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
 	return b, err
 }
 
 func (t *RuletypesRuleThresholdData) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
-	if err != nil {
-		return err
-	}
-	object := make(map[string]json.RawMessage)
-	err = json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["kind"]; found {
-		err = json.Unmarshal(raw, &t.Kind)
-		if err != nil {
-			return fmt.Errorf("error reading 'kind': %w", err)
-		}
-	}
-
-	if raw, found := object["spec"]; found {
-		err = json.Unmarshal(raw, &t.Spec)
-		if err != nil {
-			return fmt.Errorf("error reading 'spec': %w", err)
-		}
-	}
-
 	return err
 }
 

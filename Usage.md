@@ -249,7 +249,7 @@ The Secret you referenced doesn't have the field you named. `kubectl get secret 
 The API key is wrong, expired, or doesn't have admin scope on the SigNoz side. Re-create a key with `signoz-admin` role.
 
 **`status.errors` contains `"validation failed"`**
-SigNoz rejected the rule body. Most common causes (verified against SigNoz v0.122.0):
+SigNoz rejected the rule body. Most common causes (verified against SigNoz v0.124.0):
 - Missing `version: v5`.
 - Missing `compositeQuery.queryType: builder`.
 - Missing `condition.selectedQueryName` (must match a `queries[].spec.name`).

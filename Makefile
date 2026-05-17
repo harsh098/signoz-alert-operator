@@ -126,7 +126,7 @@ test: manifests generate fmt vet setup-envtest ## Run tests.
 #   - CERT_MANAGER_INSTALL_SKIP=true
 K3D ?= k3d
 K3D_CLUSTER ?= signoz-alert-operator-test-e2e
-SIGNOZ_VERSION ?= v0.122.0
+SIGNOZ_VERSION ?= v0.124.0
 SIGNOZ_VENDOR_DIR ?= test/e2e/signoz-vendor
 SIGNOZ_COMPOSE_DIR ?= $(SIGNOZ_VENDOR_DIR)/deploy/docker
 

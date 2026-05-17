@@ -113,7 +113,7 @@ operator-sdk edit --plugins=helm/v1-alpha
 ### Tests
 
 - **`make test`** — unit + envtest specs against a local `kube-apiserver` + etcd (downloaded by `setup-envtest`). Fast; runs on every PR.
-- **`make test-e2e`** — full e2e: creates a `k3d` cluster, brings up a real SigNoz instance via `docker compose` (pinned to v0.122.0), deploys the operator, exercises the Alert lifecycle including the delete-hangup case. Needs Docker and k3d locally; ~6 min runtime.
+- **`make test-e2e`** — full e2e: creates a `k3d` cluster, brings up a real SigNoz instance via `docker compose` (pinned to v0.124.0), deploys the operator, exercises the Alert lifecycle including the delete-hangup case. Needs Docker and k3d locally; ~6 min runtime.
 
 ### Lint
 
@@ -122,7 +122,7 @@ operator-sdk edit --plugins=helm/v1-alpha
 
 ### Regenerating the SigNoz client
 
-The SigNoz API client at `internal/signozclient/zz_generated.go` is produced by `oapi-codegen` from `hack/signoz-openapi.yaml` (vendored from SigNoz OSS at v0.122.0). To refresh:
+The SigNoz API client at `internal/signozclient/zz_generated.go` is produced by `oapi-codegen` from `hack/signoz-openapi.yaml` (vendored from SigNoz OSS at v0.124.0). To refresh:
 
 1. Replace `hack/signoz-openapi.yaml` with the upstream copy at the desired SigNoz version (update the header block too).
 2. If you need to call new SigNoz endpoints, append their `operationId`s to `hack/signoz-openapi-cfg.yaml` under `include-operation-ids`.
