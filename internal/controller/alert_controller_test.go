@@ -31,7 +31,10 @@ import (
 )
 
 const (
-	testAPIKey = "test-api-key"
+	testAPIKey   = "test-api-key"
+	rulesPath    = "/api/v2/rules"
+	testRuleID   = "rule-42"
+	testRulePath = rulesPath + "/" + testRuleID
 )
 
 // signozCall captures one request the controller made against the fake SigNoz.
@@ -151,13 +154,13 @@ var _ = Describe("Alert Controller", func() {
 			fakeAPI.setHandler(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				switch {
-				case r.Method == http.MethodGet && r.URL.Path == "/api/v2/rules":
+				case r.Method == http.MethodGet && r.URL.Path == rulesPath:
 					_ = json.NewEncoder(w).Encode(map[string]any{"status": "success", "data": []any{}})
-				case r.Method == http.MethodPost && r.URL.Path == "/api/v2/rules":
+				case r.Method == http.MethodPost && r.URL.Path == rulesPath:
 					w.WriteHeader(http.StatusCreated)
 					_ = json.NewEncoder(w).Encode(map[string]any{
 						"status": "success",
-						"data":   map[string]any{"id": "rule-42", "alert": "test-alert", "alertType": "METRIC_BASED_ALERT", "ruleType": "threshold_rule", "condition": map[string]any{"compositeQuery": map[string]any{}}, "state": "inactive"},
+						"data":   map[string]any{"id": testRuleID, "alert": "test-alert", "alertType": "METRIC_BASED_ALERT", "ruleType": "threshold_rule", "condition": map[string]any{"compositeQuery": map[string]any{}}, "state": "inactive"},
 					})
 				default:
 					w.WriteHeader(http.StatusInternalServerError)
@@ -171,7 +174,7 @@ var _ = Describe("Alert Controller", func() {
 			Expect(k8sClient.Get(ctx, nsName, updated)).To(Succeed())
 
 			By("populating status from the SigNoz response")
-			Expect(updated.Status.RuleID).To(Equal("rule-42"))
+			Expect(updated.Status.RuleID).To(Equal(testRuleID))
 			Expect(updated.Status.HTTPStatus).To(Equal(http.StatusCreated))
 			Expect(updated.Status.Errors).To(BeEmpty())
 
@@ -186,7 +189,7 @@ var _ = Describe("Alert Controller", func() {
 			}
 
 			By("issuing exactly one POST /api/v2/rules")
-			posts := filterCalls(calls, http.MethodPost, "/api/v2/rules")
+			posts := filterCalls(calls, http.MethodPost, rulesPath)
 			Expect(posts).To(HaveLen(1))
 
 			By("stamping k8s_id=<ns>-<name> on labels in the POST body")
@@ -203,23 +206,23 @@ var _ = Describe("Alert Controller", func() {
 	Context("when status.ruleID exists and the rule is present in SigNoz", func() {
 		It("issues PUT /api/v2/rules/{id} (no POST, no list-all)", func() {
 			// Pre-seed status.ruleID — Alert.Status is a subresource, so use Status().Update.
-			alert.Status.RuleID = "rule-42"
+			alert.Status.RuleID = testRuleID
 			Expect(k8sClient.Status().Update(ctx, alert)).To(Succeed())
 
 			fakeAPI.setHandler(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				switch {
-				case r.Method == http.MethodGet && r.URL.Path == "/api/v2/rules/rule-42":
+				case r.Method == http.MethodGet && r.URL.Path == testRulePath:
 					// Probe: rule exists.
 					_ = json.NewEncoder(w).Encode(map[string]any{
 						"status": "success",
-						"data":   map[string]any{"id": "rule-42", "alert": "test-alert", "alertType": "METRIC_BASED_ALERT", "ruleType": "threshold_rule", "condition": map[string]any{"compositeQuery": map[string]any{}}, "state": "inactive"},
+						"data":   map[string]any{"id": testRuleID, "alert": "test-alert", "alertType": "METRIC_BASED_ALERT", "ruleType": "threshold_rule", "condition": map[string]any{"compositeQuery": map[string]any{}}, "state": "inactive"},
 					})
-				case r.Method == http.MethodPut && r.URL.Path == "/api/v2/rules/rule-42":
+				case r.Method == http.MethodPut && r.URL.Path == testRulePath:
 					// Update succeeded.
 					_ = json.NewEncoder(w).Encode(map[string]any{
 						"status": "success",
-						"data":   map[string]any{"id": "rule-42", "alert": "test-alert", "alertType": "METRIC_BASED_ALERT", "ruleType": "threshold_rule", "condition": map[string]any{"compositeQuery": map[string]any{}}, "state": "inactive"},
+						"data":   map[string]any{"id": testRuleID, "alert": "test-alert", "alertType": "METRIC_BASED_ALERT", "ruleType": "threshold_rule", "condition": map[string]any{"compositeQuery": map[string]any{}}, "state": "inactive"},
 					})
 				default:
 					w.WriteHeader(http.StatusInternalServerError)
@@ -233,7 +236,7 @@ var _ = Describe("Alert Controller", func() {
 			Expect(k8sClient.Get(ctx, nsName, updated)).To(Succeed())
 
 			By("keeping the same ruleID")
-			Expect(updated.Status.RuleID).To(Equal("rule-42"))
+			Expect(updated.Status.RuleID).To(Equal(testRuleID))
 			Expect(updated.Status.HTTPStatus).To(Equal(http.StatusOK))
 			Expect(updated.Status.Errors).To(BeEmpty())
 
@@ -243,13 +246,13 @@ var _ = Describe("Alert Controller", func() {
 			calls := fakeAPI.recorded()
 
 			By("issuing zero POSTs (no duplicate creates)")
-			Expect(filterCalls(calls, http.MethodPost, "/api/v2/rules")).To(BeEmpty())
+			Expect(filterCalls(calls, http.MethodPost, rulesPath)).To(BeEmpty())
 
 			By("issuing zero list-all GETs (steady-state must not scan all rules)")
-			Expect(filterCalls(calls, http.MethodGet, "/api/v2/rules")).To(BeEmpty())
+			Expect(filterCalls(calls, http.MethodGet, rulesPath)).To(BeEmpty())
 
 			By("issuing exactly one PUT /api/v2/rules/rule-42")
-			Expect(filterCalls(calls, http.MethodPut, "/api/v2/rules/rule-42")).To(HaveLen(1))
+			Expect(filterCalls(calls, http.MethodPut, testRulePath)).To(HaveLen(1))
 
 			By("authenticating every call with SigNoz-Api-Key")
 			for _, c := range calls {
@@ -262,13 +265,13 @@ var _ = Describe("Alert Controller", func() {
 		It("falls through to POST and updates status.ruleID with the new id", func() {
 			// Pre-seed a stale ruleID — simulates "successfully reconciled
 			// rule-42 earlier, then a human deleted it via the SigNoz UI."
-			alert.Status.RuleID = "rule-42"
+			alert.Status.RuleID = testRuleID
 			Expect(k8sClient.Status().Update(ctx, alert)).To(Succeed())
 
 			fakeAPI.setHandler(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				switch {
-				case r.Method == http.MethodGet && r.URL.Path == "/api/v2/rules/rule-42":
+				case r.Method == http.MethodGet && r.URL.Path == testRulePath:
 					// Probe by id: rule is gone. SigNoz returns a JSON error body
 					// here (not an empty 404), so we mirror that — otherwise
 					// oapi-codegen's parser errors on "unexpected end of JSON input".
@@ -280,10 +283,10 @@ var _ = Describe("Alert Controller", func() {
 							"message": "rule with ID: rule-42 does not exist",
 						},
 					})
-				case r.Method == http.MethodGet && r.URL.Path == "/api/v2/rules":
+				case r.Method == http.MethodGet && r.URL.Path == rulesPath:
 					// Probe falls through to list — and nothing matches our k8s_id.
 					_ = json.NewEncoder(w).Encode(map[string]any{"status": "success", "data": []any{}})
-				case r.Method == http.MethodPost && r.URL.Path == "/api/v2/rules":
+				case r.Method == http.MethodPost && r.URL.Path == rulesPath:
 					w.WriteHeader(http.StatusCreated)
 					_ = json.NewEncoder(w).Encode(map[string]any{
 						"status": "success",
@@ -308,12 +311,12 @@ var _ = Describe("Alert Controller", func() {
 			calls := fakeAPI.recorded()
 
 			By("probing by stale id, then listing, then creating")
-			Expect(filterCalls(calls, http.MethodGet, "/api/v2/rules/rule-42")).To(HaveLen(1))
-			Expect(filterCalls(calls, http.MethodGet, "/api/v2/rules")).To(HaveLen(1))
-			Expect(filterCalls(calls, http.MethodPost, "/api/v2/rules")).To(HaveLen(1))
+			Expect(filterCalls(calls, http.MethodGet, testRulePath)).To(HaveLen(1))
+			Expect(filterCalls(calls, http.MethodGet, rulesPath)).To(HaveLen(1))
+			Expect(filterCalls(calls, http.MethodPost, rulesPath)).To(HaveLen(1))
 
 			By("not issuing any PUT (the old rule was gone, the new one was just created)")
-			Expect(filterCalls(calls, http.MethodPut, "/api/v2/rules/rule-42")).To(BeEmpty())
+			Expect(filterCalls(calls, http.MethodPut, testRulePath)).To(BeEmpty())
 			Expect(filterCalls(calls, http.MethodPut, "/api/v2/rules/rule-99")).To(BeEmpty())
 
 			By("authenticating every call with SigNoz-Api-Key")
@@ -333,7 +336,7 @@ var _ = Describe("Alert Controller", func() {
 			fakeAPI.setHandler(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				switch {
-				case r.Method == http.MethodGet && r.URL.Path == "/api/v2/rules":
+				case r.Method == http.MethodGet && r.URL.Path == rulesPath:
 					// List returns one rule already tagged with our k8s_id.
 					_ = json.NewEncoder(w).Encode(map[string]any{
 						"status": "success",
@@ -373,11 +376,11 @@ var _ = Describe("Alert Controller", func() {
 			calls := fakeAPI.recorded()
 
 			By("listing first, then PUTting to the adopted id")
-			Expect(filterCalls(calls, http.MethodGet, "/api/v2/rules")).To(HaveLen(1))
+			Expect(filterCalls(calls, http.MethodGet, rulesPath)).To(HaveLen(1))
 			Expect(filterCalls(calls, http.MethodPut, "/api/v2/rules/rule-77")).To(HaveLen(1))
 
 			By("not issuing any POST (no duplicate rule)")
-			Expect(filterCalls(calls, http.MethodPost, "/api/v2/rules")).To(BeEmpty())
+			Expect(filterCalls(calls, http.MethodPost, rulesPath)).To(BeEmpty())
 
 			By("authenticating every call with SigNoz-Api-Key")
 			for _, c := range calls {
@@ -392,7 +395,7 @@ var _ = Describe("Alert Controller", func() {
 			// has been successfully reconciled at least once.
 			alert.Finalizers = append(alert.Finalizers, finalizerName)
 			Expect(k8sClient.Update(ctx, alert)).To(Succeed())
-			alert.Status.RuleID = "rule-42"
+			alert.Status.RuleID = testRuleID
 			Expect(k8sClient.Status().Update(ctx, alert)).To(Succeed())
 
 			// Mark the Alert for deletion. With the finalizer present, K8s sets
@@ -407,13 +410,13 @@ var _ = Describe("Alert Controller", func() {
 			fakeAPI.setHandler(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				switch {
-				case r.Method == http.MethodGet && r.URL.Path == "/api/v2/rules/rule-42":
+				case r.Method == http.MethodGet && r.URL.Path == testRulePath:
 					// Probe: rule still exists.
 					_ = json.NewEncoder(w).Encode(map[string]any{
 						"status": "success",
-						"data":   map[string]any{"id": "rule-42", "alert": "test-alert", "alertType": "METRIC_BASED_ALERT", "ruleType": "threshold_rule", "condition": map[string]any{"compositeQuery": map[string]any{}}, "state": "inactive"},
+						"data":   map[string]any{"id": testRuleID, "alert": "test-alert", "alertType": "METRIC_BASED_ALERT", "ruleType": "threshold_rule", "condition": map[string]any{"compositeQuery": map[string]any{}}, "state": "inactive"},
 					})
-				case r.Method == http.MethodDelete && r.URL.Path == "/api/v2/rules/rule-42":
+				case r.Method == http.MethodDelete && r.URL.Path == testRulePath:
 					w.WriteHeader(http.StatusNoContent)
 				default:
 					w.WriteHeader(http.StatusInternalServerError)
@@ -426,11 +429,11 @@ var _ = Describe("Alert Controller", func() {
 			calls := fakeAPI.recorded()
 
 			By("issuing exactly one DELETE /api/v2/rules/rule-42")
-			Expect(filterCalls(calls, http.MethodDelete, "/api/v2/rules/rule-42")).To(HaveLen(1))
+			Expect(filterCalls(calls, http.MethodDelete, testRulePath)).To(HaveLen(1))
 
 			By("not issuing any POST or PUT (deletion path only)")
-			Expect(filterCalls(calls, http.MethodPost, "/api/v2/rules")).To(BeEmpty())
-			Expect(filterCalls(calls, http.MethodPut, "/api/v2/rules/rule-42")).To(BeEmpty())
+			Expect(filterCalls(calls, http.MethodPost, rulesPath)).To(BeEmpty())
+			Expect(filterCalls(calls, http.MethodPut, testRulePath)).To(BeEmpty())
 
 			By("authenticating every call with SigNoz-Api-Key")
 			for _, c := range calls {
@@ -449,9 +452,9 @@ var _ = Describe("Alert Controller", func() {
 			fakeAPI.setHandler(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				switch {
-				case r.Method == http.MethodGet && r.URL.Path == "/api/v2/rules":
+				case r.Method == http.MethodGet && r.URL.Path == rulesPath:
 					_ = json.NewEncoder(w).Encode(map[string]any{"status": "success", "data": []any{}})
-				case r.Method == http.MethodPost && r.URL.Path == "/api/v2/rules":
+				case r.Method == http.MethodPost && r.URL.Path == rulesPath:
 					w.WriteHeader(http.StatusInternalServerError)
 					_ = json.NewEncoder(w).Encode(map[string]any{
 						"status": "error",
@@ -465,7 +468,7 @@ var _ = Describe("Alert Controller", func() {
 			result, err := reconciler.Reconcile(ctx, reconcile.Request{NamespacedName: nsName})
 
 			By("signaling a retry (err returned OR requeue scheduled)")
-			retryScheduled := err != nil || result.RequeueAfter > 0 || result.Requeue
+			retryScheduled := err != nil || result.RequeueAfter > 0
 			Expect(retryScheduled).To(BeTrue(), "expected reconcile to schedule a retry for 5xx; got result=%+v err=%v", result, err)
 
 			updated := &api.Alert{}
@@ -491,7 +494,7 @@ var _ = Describe("Alert Controller", func() {
 			result, err := reconciler.Reconcile(ctx, reconcile.Request{NamespacedName: nsName})
 
 			By("signaling a retry (err returned OR requeue scheduled)")
-			retryScheduled := err != nil || result.RequeueAfter > 0 || result.Requeue
+			retryScheduled := err != nil || result.RequeueAfter > 0
 			Expect(retryScheduled).To(BeTrue(), "expected reconcile to schedule a retry; got result=%+v err=%v", result, err)
 
 			updated := &api.Alert{}

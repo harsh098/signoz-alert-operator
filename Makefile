@@ -293,7 +293,11 @@ KUBECTL ?= kubectl
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
-GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
+# GOLANGCI_LINT_BASE is the vanilla binary go install produces; we only invoke
+# it once to build the custom binary with plugins from .custom-gcl.yml.
+# GOLANGCI_LINT (custom-gcl) is what all lint targets actually run.
+GOLANGCI_LINT = $(LOCALBIN)/custom-gcl
+GOLANGCI_LINT_BASE = $(LOCALBIN)/golangci-lint
 OAPI_CODEGEN ?= $(LOCALBIN)/oapi-codegen
 
 ## Tool Versions
@@ -303,7 +307,7 @@ CONTROLLER_TOOLS_VERSION ?= v0.18.0
 ENVTEST_VERSION ?= $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller-runtime | awk -F'[v.]' '{printf "release-%d.%d", $$2, $$3}')
 #ENVTEST_K8S_VERSION is the version of Kubernetes to use for setting up ENVTEST binaries (i.e. 1.31)
 ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
-GOLANGCI_LINT_VERSION ?= v2.1.0
+GOLANGCI_LINT_VERSION ?= v2.11.4
 OAPI_CODEGEN_VERSION ?= v2.4.1
 
 .PHONY: kustomize
@@ -330,9 +334,14 @@ $(ENVTEST): $(LOCALBIN)
 	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
 
 .PHONY: golangci-lint
-golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
-$(GOLANGCI_LINT): $(LOCALBIN)
-	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+golangci-lint: $(GOLANGCI_LINT) ## Build the custom golangci-lint binary (logcheck plugin from .custom-gcl.yml).
+$(GOLANGCI_LINT): $(GOLANGCI_LINT_BASE) .custom-gcl.yml
+	$(GOLANGCI_LINT_BASE) custom
+	# `golangci-lint custom` writes ./custom-gcl in the working directory by default.
+	mv custom-gcl $(GOLANGCI_LINT)
+
+$(GOLANGCI_LINT_BASE): $(LOCALBIN)
+	$(call go-install-tool,$(GOLANGCI_LINT_BASE),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
 
 .PHONY: oapi-codegen
 oapi-codegen: $(OAPI_CODEGEN) ## Download oapi-codegen locally if necessary.

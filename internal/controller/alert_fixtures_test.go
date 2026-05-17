@@ -48,7 +48,11 @@ func newAlert(opts ...alertOpt) *api.Alert {
 	return a
 }
 
-// withName overrides metadata.name.
+// withName overrides metadata.name. Callers currently always pass "test-alert"
+// (which is the default), but the option is kept for clarity at call sites and
+// future variation.
+//
+//nolint:unparam // intentional fixture flexibility
 func withName(name string) alertOpt {
 	return func(a *api.Alert) { a.Name = name }
 }
@@ -63,13 +67,10 @@ func withEndpoint(name string) alertOpt {
 	return func(a *api.Alert) { a.Spec.EndpointRef.Name = name }
 }
 
-// withRuleJSON overrides spec.rule with the given raw JSON.
-func withRuleJSON(raw string) alertOpt {
-	return func(a *api.Alert) { a.Spec.Rule = runtime.RawExtension{Raw: []byte(raw)} }
-}
-
 // withRuleID pre-populates status.ruleID. Use to simulate an Alert that has
 // already been reconciled successfully at least once.
+//
+//nolint:unparam // intentional fixture flexibility
 func withRuleID(id string) alertOpt {
 	return func(a *api.Alert) { a.Status.RuleID = id }
 }
@@ -83,14 +84,6 @@ func withDeletionTimestamp() alertOpt {
 		a.DeletionTimestamp = &now
 		// k8s API server only allows DeletionTimestamp to be set when a finalizer
 		// is present; mirror that here so envtest paths see a consistent object.
-		a.Finalizers = append(a.Finalizers, "monitoring.hmx86.cloud/finalizer")
-	}
-}
-
-// withFinalizer adds the operator's finalizer. Use when testing reconcile
-// paths that expect the finalizer to already be installed.
-func withFinalizer() alertOpt {
-	return func(a *api.Alert) {
 		a.Finalizers = append(a.Finalizers, "monitoring.hmx86.cloud/finalizer")
 	}
 }
