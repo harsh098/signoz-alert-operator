@@ -125,7 +125,10 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if httpStatus >= 400 {
 		logger.Error(errors.New("signoz returned non-2xx"), "scheduling retry", "status", httpStatus, "body", errBody)
 		_ = r.Status().Update(ctx, &alert)
-		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+		isCleanup := httpStatus == 404 && op == DELET
+		if !isCleanup {
+			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+		}
 	}
 
 	if alert.DeletionTimestamp != nil {
