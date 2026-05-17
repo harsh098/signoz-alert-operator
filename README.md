@@ -1,125 +1,154 @@
 # signoz-alert-operator
-// TODO(user): Add simple overview of use/purpose
+
+A Kubernetes operator for managing [SigNoz](https://signoz.io) alert rules declaratively as Kubernetes resources.
+
+> This project is an independent community operator. It is **not** affiliated with, endorsed by, or sponsored by SigNoz Inc. "SigNoz" is a trademark of SigNoz Inc., used here for descriptive purposes only.
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+
+`signoz-alert-operator` makes SigNoz alert rules first-class Kubernetes objects so you can manage them with the same tooling you use for everything else in your cluster — GitOps, kustomize/helm overlays, RBAC, kubectl. The operator reconciles `Alert` custom resources against a SigNoz instance's `/api/v2/rules` API, keeping each rule in lockstep with its YAML manifest.
+
+It ships two CRDs:
+
+- **`Endpoint`** — points at a SigNoz instance (`spec.instanceURL`) and references a Kubernetes `Secret` (`spec.secretKeyRef`) holding the SigNoz API key. No controller; it's purely a reference object so individual `Alert` resources don't repeat credentials.
+- **`Alert`** — references an `Endpoint` and carries the rule body as a `runtime.RawExtension` under `spec.rule`. The raw JSON is forwarded verbatim to SigNoz, so the operator stays compatible with any SigNoz alert-rule version your instance accepts.
+
+Notable design choices:
+
+- **Cross-cluster idempotency.** The controller stamps `labels.k8s_id = "<namespace>-<name>"` on every rule it creates in SigNoz. When the same manifest is applied to a fresh cluster pointing at the same SigNoz, the controller discovers the existing rule by that label and adopts it instead of creating a duplicate — handy for cluster migrations and management-cluster topologies.
+- **Status surfaces real errors.** `status.ruleID` is the SigNoz-assigned id; `status.httpStatus` and `status.errors` carry whatever SigNoz returned, so `kubectl describe alert` is the first place to look when something's wrong.
+- **Finalizer-driven cleanup.** Deleting an `Alert` CR triggers a `DELETE /api/v2/rules/{id}` to SigNoz before the object is GC'd from etcd. The operator tolerates 404 (already gone) as a no-op.
 
 ## Getting Started
 
 ### Prerequisites
-- go version v1.24.0+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
 
-### To Deploy on the cluster
-**Build and push your image to the location specified by `IMG`:**
+- Go v1.24.0+
+- Docker 17.03+
+- kubectl v1.11.3+
+- A Kubernetes v1.11.3+ cluster
+- A reachable SigNoz instance (self-hosted or SigNoz Cloud) with a service-account API key
+
+### Quick install from the latest release
 
 ```sh
-make docker-build docker-push IMG=<some-registry>/signoz-alert-operator:tag
+kubectl apply -f https://github.com/harsh098/signoz-alert-operator/releases/latest/download/install.yaml
 ```
 
-**NOTE:** This image ought to be published in the personal registry you specified.
-And it is required to have access to pull the image from the working environment.
-Make sure you have the proper permission to the registry if the above commands don’t work.
+This applies CRDs + the operator Deployment to the `signoz-alert-operator-system` namespace using the released container image from `ghcr.io/harsh098/signoz-alert-operator`.
 
-**Install the CRDs into the cluster:**
+### Build and deploy from source
+
+**Build and push your image:**
+
+```sh
+make docker-build docker-push IMG=ghcr.io/harsh098/signoz-alert-operator:dev
+```
+
+**Install the CRDs:**
 
 ```sh
 make install
 ```
 
-**Deploy the Manager to the cluster with the image specified by `IMG`:**
+**Deploy the Manager:**
 
 ```sh
-make deploy IMG=<some-registry>/signoz-alert-operator:tag
+make deploy IMG=ghcr.io/harsh098/signoz-alert-operator:dev
 ```
 
-> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin.
+> **NOTE**: If you encounter RBAC errors, you may need cluster-admin privileges.
 
-**Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
+**Apply the sample resources:**
 
 ```sh
 kubectl apply -k config/samples/
 ```
 
->**NOTE**: Ensure that the samples has default values to test it out.
+The `config/samples/` directory ships an `Endpoint` (with a placeholder Secret — replace `REPLACE_ME` with your real API key) and an `Alert` targeting it.
 
-### To Uninstall
-**Delete the instances (CRs) from the cluster:**
-
-```sh
-kubectl delete -k config/samples/
-```
-
-**Delete the APIs(CRDs) from the cluster:**
+### Uninstall
 
 ```sh
-make uninstall
-```
-
-**UnDeploy the controller from the cluster:**
-
-```sh
-make undeploy
+kubectl delete -k config/samples/   # delete the sample CRs
+make uninstall                      # delete the CRDs
+make undeploy                       # remove the controller
 ```
 
 ## Project Distribution
 
-Following the options to release and provide this solution to the users.
+### Tag-based releases (preferred)
 
-### By providing a bundle with all YAML files
+Push a `vX.Y.Z` tag to trigger the release workflow (see `.github/workflows/release.yml`). The workflow:
 
-1. Build the installer for the image built and published in the registry:
+1. Builds a multi-arch (`linux/amd64`, `linux/arm64`) image and pushes to `ghcr.io/harsh098/signoz-alert-operator:vX.Y.Z` and `:latest`.
+2. Generates a self-contained `dist/install.yaml` with that image tag baked in.
+3. Creates a GitHub Release with `install.yaml` attached and auto-generated release notes.
 
-```sh
-make build-installer IMG=<some-registry>/signoz-alert-operator:tag
-```
-
-**NOTE:** The makefile target mentioned above generates an 'install.yaml'
-file in the dist directory. This file contains all the resources built
-with Kustomize, which are necessary to install this project without its
-dependencies.
-
-2. Using the installer
-
-Users can just run 'kubectl apply -f <URL for YAML BUNDLE>' to install
-the project, i.e.:
+Consumers install via the release-attached YAML:
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/signoz-alert-operator/<tag or branch>/dist/install.yaml
+kubectl apply -f https://github.com/harsh098/signoz-alert-operator/releases/download/v0.1.0/install.yaml
 ```
 
-### By providing a Helm Chart
+### Local install manifest
 
-1. Build the chart using the optional helm plugin
+If you want the same manifest without cutting a release:
+
+```sh
+make build-installer IMG=ghcr.io/harsh098/signoz-alert-operator:dev
+# → dist/install.yaml
+```
+
+### Helm chart (future)
+
+Not yet provided. The operator-sdk Helm plugin can scaffold one:
 
 ```sh
 operator-sdk edit --plugins=helm/v1-alpha
 ```
 
-2. See that a chart was generated under 'dist/chart', and users
-can obtain this solution from there.
+## Development
 
-**NOTE:** If you change the project, you need to update the Helm Chart
-using the same command above to sync the latest changes. Furthermore,
-if you create webhooks, you need to use the above command with
-the '--force' flag and manually ensure that any custom configuration
-previously added to 'dist/chart/values.yaml' or 'dist/chart/manager/manager.yaml'
-is manually re-applied afterwards.
+### Tests
+
+- **`make test`** — unit + envtest specs against a local `kube-apiserver` + etcd (downloaded by `setup-envtest`). Fast; runs on every PR.
+- **`make test-e2e`** — full e2e: creates a `k3d` cluster, brings up a real SigNoz instance via `docker compose` (pinned to v0.122.0), deploys the operator, exercises the Alert lifecycle including the delete-hangup case. Needs Docker and k3d locally; ~6 min runtime.
+
+### Lint
+
+- **`make lint`** — runs a custom-built `golangci-lint` binary with the [`logcheck`](https://github.com/kubernetes/utils/tree/master/logtools/logcheck) plugin enabled (see `.custom-gcl.yml`). First invocation builds the custom binary; subsequent runs reuse it.
+- **`make lint-config`** — schema-validates `.golangci.yml`.
+
+### Regenerating the SigNoz client
+
+The SigNoz API client at `internal/signozclient/zz_generated.go` is produced by `oapi-codegen` from `hack/signoz-openapi.yaml` (vendored from SigNoz OSS at v0.122.0). To refresh:
+
+1. Replace `hack/signoz-openapi.yaml` with the upstream copy at the desired SigNoz version (update the header block too).
+2. If you need to call new SigNoz endpoints, append their `operationId`s to `hack/signoz-openapi-cfg.yaml` under `include-operation-ids`.
+3. `make generate-client`.
 
 ## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
 
-**NOTE:** Run `make help` for more information on all potential `make` targets
+Contributions are welcome. A few ground rules to keep things smooth:
 
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+1. **Open an issue first** for non-trivial changes (new CRDs, breaking schema changes, new external dependencies). For bug fixes and small improvements, a PR straight off `main` is fine.
+2. **Branch and PR.** Fork the repo, create a feature branch, push, open a PR. Keep the diff focused — one logical change per PR.
+3. **Before pushing**:
+   - `make test` (envtest passes)
+   - `make lint` (no findings)
+   - If you touched controller logic, add or update a spec in `internal/controller/alert_controller_test.go`.
+   - If you re-vendor the OpenAPI spec or change codegen, run `make generate-client` and commit the result.
+4. **Commit style.** Concise present-tense subject; reference issues with `Fixes #N` in the body when applicable. Sign your commits if you can (`git commit -s`).
+5. **Be kind in reviews.** This is a side project; expect human-paced response times.
+
+Areas where help is especially welcome: Helm chart, more `Alert` lifecycle test scenarios, support for SigNoz dashboard resources.
+
+**NOTE:** Run `make help` for the full list of `make` targets. Project layout follows [Kubebuilder](https://book.kubebuilder.io/introduction.html) conventions.
 
 ## License
 
-Copyright 2026.
+Copyright 2026 Harsh Mishra.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -133,3 +162,4 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
+Third-party attributions (including the vendored SigNoz OpenAPI spec) are listed in [`NOTICE`](NOTICE).
