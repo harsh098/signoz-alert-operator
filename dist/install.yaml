@@ -1,0 +1,577 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+    control-plane: controller-manager
+  name: signoz-alert-operator-system
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: alerts.monitoring.hmx86.cloud
+spec:
+  group: monitoring.hmx86.cloud
+  names:
+    kind: Alert
+    listKind: AlertList
+    plural: alerts
+    singular: alert
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Alert is the Schema for the alerts API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: AlertSpec defines the desired state of Alert.
+            properties:
+              endpointRef:
+                description: |-
+                  EndpointRef holds reference to the kind Endpoint
+                  the points at the target Signoz Instance
+                properties:
+                  name:
+                    description: |-
+                      Name refers to the name of the kubernetes
+                      object of kind Endpoint in the same namespace
+                      as the Alert
+                    minLength: 1
+                    type: string
+                required:
+                - name
+                type: object
+              rule:
+                description: |-
+                  Rule is the SigNoz alert rule body (matches RuletypesPostableRule from
+                  the SigNoz API). Schema-validated server-side only at the top level —
+                  contents are forwarded verbatim to SigNoz.
+                  The current controller is wire compatible with
+                  https://signoz.io/api-reference/v0.122.0#/operations/CreateRule
+                x-kubernetes-preserve-unknown-fields: true
+            required:
+            - endpointRef
+            - rule
+            type: object
+          status:
+            description: AlertStatus defines the observed state of Alert.
+            properties:
+              errors:
+                description: Errors is the response body from the most recent non-2xx
+                  SigNoz API call. Empty on success.
+                type: string
+              httpStatus:
+                description: HTTPStatus is the HTTP status code from the most recent
+                  SigNoz API call.
+                type: integer
+              ruleID:
+                description: RuleID is the SigNoz-assigned rule ID. Empty until first
+                  successful create.
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: endpoints.monitoring.hmx86.cloud
+spec:
+  group: monitoring.hmx86.cloud
+  names:
+    kind: Endpoint
+    listKind: EndpointList
+    plural: endpoints
+    singular: endpoint
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Endpoint is the Schema for the endpoints API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: EndpointSpec defines the desired state of Endpoint.
+            properties:
+              instanceURL:
+                description: |-
+                  InstanceURL is the URL Endpoint starting with http:// or https:// for
+                  the self-hosted or Signoz Cloud Instance.
+                minLength: 1
+                type: string
+                x-kubernetes-validations:
+                - message: instanceURL must be a valid http or https URL
+                  rule: isURL(self) && (url(self).getScheme() == 'http' || url(self).getScheme()
+                    == 'https')
+              secretKeyRef:
+                description: |-
+                  SecretRef is the reference to the secret containing the API Key for Signoz.
+                  Required if using Signoz Cloud.
+                properties:
+                  key:
+                    description: |-
+                      Key within the Secret's data storing the required
+                      API Key
+                    minLength: 1
+                    type: string
+                  name:
+                    description: Name of Secret containing the API Key
+                    minLength: 1
+                    type: string
+                required:
+                - key
+                - name
+                type: object
+            required:
+            - instanceURL
+            type: object
+          status:
+            description: EndpointStatus defines the observed state of Endpoint.
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+  name: signoz-alert-operator-controller-manager
+  namespace: signoz-alert-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+  name: signoz-alert-operator-leader-election-role
+  namespace: signoz-alert-operator-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+  name: signoz-alert-operator-alert-admin-role
+rules:
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - alerts
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - alerts/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+  name: signoz-alert-operator-alert-editor-role
+rules:
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - alerts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - alerts/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+  name: signoz-alert-operator-alert-viewer-role
+rules:
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - alerts
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - alerts/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+  name: signoz-alert-operator-endpoint-admin-role
+rules:
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - endpoints
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - endpoints/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+  name: signoz-alert-operator-endpoint-editor-role
+rules:
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - endpoints
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - endpoints/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+  name: signoz-alert-operator-endpoint-viewer-role
+rules:
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - endpoints/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: signoz-alert-operator-manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - alerts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - alerts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - alerts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - monitoring.hmx86.cloud
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: signoz-alert-operator-metrics-auth-role
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: signoz-alert-operator-metrics-reader
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+  name: signoz-alert-operator-leader-election-rolebinding
+  namespace: signoz-alert-operator-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: signoz-alert-operator-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: signoz-alert-operator-controller-manager
+  namespace: signoz-alert-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+  name: signoz-alert-operator-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: signoz-alert-operator-manager-role
+subjects:
+- kind: ServiceAccount
+  name: signoz-alert-operator-controller-manager
+  namespace: signoz-alert-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: signoz-alert-operator-metrics-auth-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: signoz-alert-operator-metrics-auth-role
+subjects:
+- kind: ServiceAccount
+  name: signoz-alert-operator-controller-manager
+  namespace: signoz-alert-operator-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+    control-plane: controller-manager
+  name: signoz-alert-operator-controller-manager-metrics-service
+  namespace: signoz-alert-operator-system
+spec:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app.kubernetes.io/name: signoz-alert-operator
+    control-plane: controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: signoz-alert-operator
+    control-plane: controller-manager
+  name: signoz-alert-operator-controller-manager
+  namespace: signoz-alert-operator-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: signoz-alert-operator
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        app.kubernetes.io/name: signoz-alert-operator
+        control-plane: controller-manager
+    spec:
+      containers:
+      - args:
+        - --metrics-bind-address=:8443
+        - --leader-elect
+        - --health-probe-bind-address=:8081
+        command:
+        - /manager
+        image: controller:latest
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        ports: []
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts: []
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: signoz-alert-operator-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes: []
