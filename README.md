@@ -1,165 +1,94 @@
 # signoz-alert-operator
 
+[![lint](https://github.com/harsh098/signoz-alert-operator/actions/workflows/lint.yml/badge.svg)](https://github.com/harsh098/signoz-alert-operator/actions/workflows/lint.yml)
+[![test](https://github.com/harsh098/signoz-alert-operator/actions/workflows/test.yml/badge.svg)](https://github.com/harsh098/signoz-alert-operator/actions/workflows/test.yml)
+[![e2e](https://github.com/harsh098/signoz-alert-operator/actions/workflows/test-e2e.yml/badge.svg)](https://github.com/harsh098/signoz-alert-operator/actions/workflows/test-e2e.yml)
+[![release](https://img.shields.io/github/v/release/harsh098/signoz-alert-operator?include_prereleases&sort=semver)](https://github.com/harsh098/signoz-alert-operator/releases)
+[![license](https://img.shields.io/github/license/harsh098/signoz-alert-operator)](LICENSE)
+
 A Kubernetes operator for managing [SigNoz](https://signoz.io) alert rules declaratively as Kubernetes resources.
 
 > This project is an independent community operator. It is **not** affiliated with, endorsed by, or sponsored by SigNoz Inc. "SigNoz" is a trademark of SigNoz Inc., used here for descriptive purposes only.
 
-## Description
+---
 
-`signoz-alert-operator` makes SigNoz alert rules first-class Kubernetes objects so you can manage them with the same tooling you use for everything else in your cluster — GitOps, kustomize/helm overlays, RBAC, kubectl. The operator reconciles `Alert` custom resources against a SigNoz instance's `/api/v2/rules` API, keeping each rule in lockstep with its YAML manifest.
+- [What it does](#what-it-does)
+- [Quick start](#quick-start)
+- [Compatibility](#compatibility)
+- [Versioning](#versioning)
+- [License](#license)
 
-It ships two CRDs:
+Contributing or hacking on the operator? See **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
-- **`Endpoint`** — points at a SigNoz instance (`spec.instanceURL`) and references a Kubernetes `Secret` (`spec.secretKeyRef`) holding the SigNoz API key. No controller; it's purely a reference object so individual `Alert` resources don't repeat credentials.
-- **`Alert`** — references an `Endpoint` and carries the rule body as a `runtime.RawExtension` under `spec.rule`. The raw JSON is forwarded verbatim to SigNoz, so the operator stays compatible with any SigNoz alert-rule version your instance accepts.
+End-to-end walkthrough with a real example? See **[Usage.md](Usage.md)**.
 
-Notable design choices:
+## What it does
 
-- **Cross-cluster idempotency.** The controller stamps `labels.k8s_id = "<namespace>-<name>"` on every rule it creates in SigNoz. When the same manifest is applied to a fresh cluster pointing at the same SigNoz, the controller discovers the existing rule by that label and adopts it instead of creating a duplicate — handy for cluster migrations and management-cluster topologies.
-- **Status surfaces real errors.** `status.ruleID` is the SigNoz-assigned id; `status.httpStatus` and `status.errors` carry whatever SigNoz returned, so `kubectl describe alert` is the first place to look when something's wrong.
-- **Finalizer-driven cleanup.** Deleting an `Alert` CR triggers a `DELETE /api/v2/rules/{id}` to SigNoz before the object is GC'd from etcd. The operator tolerates 404 (already gone) as a no-op.
+`signoz-alert-operator` makes SigNoz alert rules first-class Kubernetes objects. The operator reconciles `Alert` custom resources against a SigNoz instance's `/api/v2/rules` API, keeping each rule in lockstep with its YAML manifest. Manage alerts the same way you manage everything else in the cluster — GitOps, kustomize/Helm overlays, RBAC, kubectl.
 
-## Getting Started
+Two CRDs:
 
-### Prerequisites
+- **`Endpoint`** — points at a SigNoz instance (`spec.instanceURL`) and references a Kubernetes `Secret` (`spec.secretKeyRef`) holding the SigNoz API key. No controller; just a typed reference object so `Alert` resources don't repeat credentials.
+- **`Alert`** — references an `Endpoint` and carries the rule body as raw JSON under `spec.rule`. The body is forwarded verbatim to SigNoz, so the operator stays compatible with whatever alert-rule format your SigNoz version accepts. `kubectl describe alert` surfaces the SigNoz-assigned rule id, last HTTP status, and any error from the API.
 
-- Go v1.24.0+
-- Docker 17.03+
-- kubectl v1.11.3+
-- A Kubernetes v1.11.3+ cluster
-- A reachable SigNoz instance (self-hosted or SigNoz Cloud) with a service-account API key
+## Quick start
 
-### Quick install from the latest release
+**Install the operator** — CRDs + controller, multi-arch image, namespace `signoz-alert-operator-system`:
 
 ```sh
 kubectl apply -f https://github.com/harsh098/signoz-alert-operator/releases/latest/download/install.yaml
 ```
 
-This applies CRDs + the operator Deployment to the `signoz-alert-operator-system` namespace using the released container image from `ghcr.io/harsh098/signoz-alert-operator`.
+**Create an Endpoint and an Alert.** Minimal shape:
 
-### Build and deploy from source
-
-**Build and push your image:**
-
-```sh
-make docker-build docker-push IMG=ghcr.io/harsh098/signoz-alert-operator:dev
+```yaml
+apiVersion: monitoring.hmx86.cloud/v1alpha1
+kind: Endpoint
+metadata: { name: signoz, namespace: monitoring }
+spec:
+  instanceURL: https://your-tenant.us.signoz.cloud
+  secretKeyRef: { name: signoz-api-key, key: api-key }
+---
+apiVersion: monitoring.hmx86.cloud/v1alpha1
+kind: Alert
+metadata: { name: my-alert, namespace: monitoring }
+spec:
+  endpointRef: { name: signoz }
+  rule: { ... }   # raw SigNoz rule JSON
 ```
 
-**Install the CRDs:**
+A complete working example (with the rule body, channel setup, troubleshooting, and the multi-cluster `k8s_id` adoption story) is in **[Usage.md](Usage.md)**.
 
-```sh
-make install
-```
+## Compatibility
 
-**Deploy the Manager:**
+The operator's tag mirrors the SigNoz API version it was verified against. See [Versioning](#versioning) for the scheme.
 
-```sh
-make deploy IMG=ghcr.io/harsh098/signoz-alert-operator:dev
-```
+| Operator | SigNoz API (verified wire-compat) | Kubernetes | Notes |
+|---|---|---|---|
+| **v1.124.1** | v0.124.0 | 1.30+ | Latest. Bugfix: `kubectl delete alert` no longer hangs after the SigNoz-side rule was removed via the UI. |
+| **v1.124.0** | v0.124.0 | 1.30+ | First v0.124-line release. The new `/api/v2/infra_monitoring/*` endpoints in SigNoz don't affect the operator. |
+| **v1.122.0** | v0.122.0 | 1.30+ | Initial release. |
 
-> **NOTE**: If you encounter RBAC errors, you may need cluster-admin privileges.
+**Untested but probably works:** SigNoz versions between the listed ones (e.g. v0.123.x) when the `/api/v2/rules` schema hasn't drifted. Mismatched pairs may use endpoints the older side doesn't expose — pin to a matching pair if you want predictable behaviour.
 
-**Apply the sample resources:**
+**Kubernetes:** built against controller-runtime targeting Kubernetes 1.33. Should work on any K8s 1.30+ since we only use plain CRD + Secret + ClusterRole primitives. The CEL validation on `Endpoint.spec.instanceURL` requires K8s 1.25+.
 
-```sh
-kubectl apply -k config/samples/
-```
+## Versioning
 
-The `config/samples/` directory ships an `Endpoint` (with a placeholder Secret — replace `REPLACE_ME` with your real API key) and an `Alert` targeting it.
+The operator uses a **mirror-version** scheme: an operator tag `v1.X.Y` corresponds to SigNoz upstream `v0.X.0`. The `1` prefix marks this as the operator's v1 line; `X` tracks SigNoz; `Y` is the operator's own patch counter (wire-compat doesn't move on a patch bump).
 
-### Uninstall
+Read `v1.124.1` as: "operator v1 line, verified against SigNoz v0.124.x, first patch."
 
-```sh
-kubectl delete -k config/samples/   # delete the sample CRs
-make uninstall                      # delete the CRDs
-make undeploy                       # remove the controller
-```
-
-## Project Distribution
-
-### Tag-based releases (preferred)
-
-Push a `vX.Y.Z` tag to trigger the release workflow (see `.github/workflows/release.yml`). The workflow:
-
-1. Builds a multi-arch (`linux/amd64`, `linux/arm64`) image and pushes to `ghcr.io/harsh098/signoz-alert-operator:vX.Y.Z` and `:latest`.
-2. Generates a self-contained `dist/install.yaml` with that image tag baked in.
-3. Creates a GitHub Release with `install.yaml` attached and auto-generated release notes.
-
-Consumers install via the release-attached YAML:
-
-```sh
-kubectl apply -f https://github.com/harsh098/signoz-alert-operator/releases/download/v0.1.0/install.yaml
-```
-
-### Local install manifest
-
-If you want the same manifest without cutting a release:
-
-```sh
-make build-installer IMG=ghcr.io/harsh098/signoz-alert-operator:dev
-# → dist/install.yaml
-```
-
-### Helm chart (future)
-
-Not yet provided. The operator-sdk Helm plugin can scaffold one:
-
-```sh
-operator-sdk edit --plugins=helm/v1-alpha
-```
-
-## Development
-
-### Tests
-
-- **`make test`** — unit + envtest specs against a local `kube-apiserver` + etcd (downloaded by `setup-envtest`). Fast; runs on every PR.
-- **`make test-e2e`** — full e2e: creates a `k3d` cluster, brings up a real SigNoz instance via `docker compose` (pinned to v0.124.0), deploys the operator, exercises the Alert lifecycle including the delete-hangup case. Needs Docker and k3d locally; ~6 min runtime.
-
-### Lint
-
-- **`make lint`** — runs a custom-built `golangci-lint` binary with the [`logcheck`](https://github.com/kubernetes/utils/tree/master/logtools/logcheck) plugin enabled (see `.custom-gcl.yml`). First invocation builds the custom binary; subsequent runs reuse it.
-- **`make lint-config`** — schema-validates `.golangci.yml`.
-
-### Regenerating the SigNoz client
-
-The SigNoz API client at `internal/signozclient/zz_generated.go` is produced by `oapi-codegen` from `hack/signoz-openapi.yaml` (vendored from SigNoz OSS at v0.124.0). To refresh:
-
-1. Replace `hack/signoz-openapi.yaml` with the upstream copy at the desired SigNoz version (update the header block too).
-2. If you need to call new SigNoz endpoints, append their `operationId`s to `hack/signoz-openapi-cfg.yaml` under `include-operation-ids`.
-3. `make generate-client`.
-
-## Contributing
-
-Contributions are welcome. A few ground rules to keep things smooth:
-
-1. **Open an issue first** for non-trivial changes (new CRDs, breaking schema changes, new external dependencies). For bug fixes and small improvements, a PR straight off `main` is fine.
-2. **Branch and PR.** Fork the repo, create a feature branch, push, open a PR. Keep the diff focused — one logical change per PR.
-3. **Before pushing**:
-   - `make test` (envtest passes)
-   - `make lint` (no findings)
-   - If you touched controller logic, add or update a spec in `internal/controller/alert_controller_test.go`.
-   - If you re-vendor the OpenAPI spec or change codegen, run `make generate-client` and commit the result.
-4. **Commit style.** Concise present-tense subject; reference issues with `Fixes #N` in the body when applicable. Sign your commits if you can (`git commit -s`).
-5. **Be kind in reviews.** This is a side project; expect human-paced response times.
-
-Areas where help is especially welcome: Helm chart, more `Alert` lifecycle test scenarios, support for SigNoz dashboard resources.
-
-**NOTE:** Run `make help` for the full list of `make` targets. Project layout follows [Kubebuilder](https://book.kubebuilder.io/introduction.html) conventions.
+This keeps the support story self-documenting — a user on SigNoz v0.124.x knows to pull operator `v1.124.x` — and lets us ship operator-only bugfixes without confusion about which SigNoz version they target.
 
 ## License
 
 Copyright 2026 Harsh Mishra.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 Third-party attributions (including the vendored SigNoz OpenAPI spec) are listed in [`NOTICE`](NOTICE).
