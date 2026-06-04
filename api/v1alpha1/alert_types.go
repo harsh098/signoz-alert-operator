@@ -43,7 +43,7 @@ type AlertSpec struct {
 	// the SigNoz API). Schema-validated server-side only at the top level —
 	// contents are forwarded verbatim to SigNoz.
 	// The current controller is wire compatible with
-	// https://signoz.io/api-reference/v0.124.0#/operations/CreateRule
+	// https://signoz.io/api-reference/v0.127.0#/operations/CreateRule
 	// +kubebuilder:validation:Schemaless
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +kubebuilder:validation:Required

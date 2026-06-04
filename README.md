@@ -63,13 +63,16 @@ A complete working example (with the rule body, channel setup, troubleshooting, 
 
 The operator's tag mirrors the SigNoz API version it was verified against. See [Versioning](#versioning) for the scheme.
 
-| Operator | SigNoz API (verified wire-compat) | Kubernetes | Notes |
+**Supported SigNoz versions:** `v0.122.0`, `v0.123.0`, `v0.124.0`, `v0.125.0`, `v0.126.0`, `v0.127.0` (and their patch releases). The `/api/v2/rules` schema is stable across this range — the operator's `runtime.RawExtension`-typed `spec.rule` forwards the body verbatim, so as long as your SigNoz accepts the rule, the operator can manage it.
+
+| Operator | SigNoz API (verified against) | Kubernetes | Notes |
 |---|---|---|---|
-| **v1.124.1** | v0.124.0 | 1.30+ | Latest. Bugfix: `kubectl delete alert` no longer hangs after the SigNoz-side rule was removed via the UI. |
+| **v1.127.0** | v0.122.0 – v0.127.0 | 1.30+ | Latest. e2e run against v0.127.0; wire-compat verified across the full range — only `ErrorsJSON` gained additive optional fields between v0.124 and v0.127, no caller impact. |
+| **v1.124.1** | v0.124.0 | 1.30+ | Bugfix: `kubectl delete alert` no longer hangs after the SigNoz-side rule was removed via the UI. |
 | **v1.124.0** | v0.124.0 | 1.30+ | First v0.124-line release. The new `/api/v2/infra_monitoring/*` endpoints in SigNoz don't affect the operator. |
 | **v1.122.0** | v0.122.0 | 1.30+ | Initial release. |
 
-**Untested but probably works:** SigNoz versions between the listed ones (e.g. v0.123.x) when the `/api/v2/rules` schema hasn't drifted. Mismatched pairs may use endpoints the older side doesn't expose — pin to a matching pair if you want predictable behaviour.
+The "verified against" column reflects what each tagged release was exercised against in CI/e2e — the latest operator is the recommended pick for any supported SigNoz version. Mismatched pairs outside the supported range may use endpoints one side doesn't expose; pin to a matching pair if you want predictable behaviour.
 
 **Kubernetes:** built against controller-runtime targeting Kubernetes 1.33. Should work on any K8s 1.30+ since we only use plain CRD + Secret + ClusterRole primitives. The CEL validation on `Endpoint.spec.instanceURL` requires K8s 1.25+.
 
@@ -77,9 +80,9 @@ The operator's tag mirrors the SigNoz API version it was verified against. See [
 
 The operator uses a **mirror-version** scheme: an operator tag `v1.X.Y` corresponds to SigNoz upstream `v0.X.0`. The `1` prefix marks this as the operator's v1 line; `X` tracks SigNoz; `Y` is the operator's own patch counter (wire-compat doesn't move on a patch bump).
 
-Read `v1.124.1` as: "operator v1 line, verified against SigNoz v0.124.x, first patch."
+Read `v1.127.0` as: "operator v1 line, verified against SigNoz v0.127.x, initial release for that line."
 
-This keeps the support story self-documenting — a user on SigNoz v0.124.x knows to pull operator `v1.124.x` — and lets us ship operator-only bugfixes without confusion about which SigNoz version they target.
+This keeps the support story self-documenting — a user on SigNoz v0.127.x knows to pull operator `v1.127.x` — and lets us ship operator-only bugfixes without confusion about which SigNoz version they target.
 
 ## License
 
