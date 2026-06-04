@@ -221,15 +221,24 @@ const (
 
 // ErrorsJSON defines model for ErrorsJSON.
 type ErrorsJSON struct {
-	Code    string                           `json:"code"`
-	Errors  *[]ErrorsResponseerroradditional `json:"errors,omitempty"`
-	Message string                           `json:"message"`
-	Url     *string                          `json:"url,omitempty"`
+	Code              string                           `json:"code"`
+	Errors            *[]ErrorsResponseerroradditional `json:"errors,omitempty"`
+	InvalidReferences *[]string                        `json:"invalidReferences,omitempty"`
+	Message           string                           `json:"message"`
+	Retry             *ErrorsResponseretryjson         `json:"retry,omitempty"`
+	Suggestions       *[]string                        `json:"suggestions,omitempty"`
+	Type              *string                          `json:"type,omitempty"`
+	Url               *string                          `json:"url,omitempty"`
 }
 
 // ErrorsResponseerroradditional defines model for ErrorsResponseerroradditional.
 type ErrorsResponseerroradditional struct {
 	Message *string `json:"message,omitempty"`
+}
+
+// ErrorsResponseretryjson defines model for ErrorsResponseretryjson.
+type ErrorsResponseretryjson struct {
+	Delay *TimeDuration `json:"delay,omitempty"`
 }
 
 // MetrictypesComparisonSpaceAggregationParam defines model for MetrictypesComparisonSpaceAggregationParam.
@@ -744,6 +753,9 @@ type TelemetrytypesTelemetryFieldKey struct {
 	Signal        *TelemetrytypesSignal        `json:"signal,omitempty"`
 	Unit          *string                      `json:"unit,omitempty"`
 }
+
+// TimeDuration defines model for TimeDuration.
+type TimeDuration = int64
 
 // CreateRuleJSONRequestBody defines body for CreateRule for application/json ContentType.
 type CreateRuleJSONRequestBody = RuletypesPostableRule
