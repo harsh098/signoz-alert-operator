@@ -4,7 +4,7 @@
 [![test](https://github.com/harsh098/signoz-alert-operator/actions/workflows/test.yml/badge.svg)](https://github.com/harsh098/signoz-alert-operator/actions/workflows/test.yml)
 [![e2e](https://github.com/harsh098/signoz-alert-operator/actions/workflows/test-e2e.yml/badge.svg)](https://github.com/harsh098/signoz-alert-operator/actions/workflows/test-e2e.yml)
 [![release](https://img.shields.io/github/v/release/harsh098/signoz-alert-operator?include_prereleases&sort=semver)](https://github.com/harsh098/signoz-alert-operator/releases)
-[![license](https://img.shields.io/github/license/harsh098/signoz-alert-operator)](LICENSE)
+[![license](https://img.shields.io/github/license/harsh098/signoz-alert-operator?)](LICENSE)
 
 A Kubernetes operator for managing [SigNoz](https://signoz.io) alert rules declaratively as Kubernetes resources.
 
