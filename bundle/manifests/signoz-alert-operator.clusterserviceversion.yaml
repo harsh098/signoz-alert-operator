@@ -84,7 +84,7 @@ metadata:
     capabilities: Basic Install
     categories: Monitoring
     containerImage: ghcr.io/harsh098/signoz-alert-operator:v1.131.2
-    createdAt: "2026-07-04T18:57:52Z"
+    createdAt: "2026-07-04T19:00:40Z"
     description: Declaratively manage SigNoz alert rules and instance endpoints as
       Kubernetes custom resources.
     operators.operatorframework.io/builder: operator-sdk-v1.42.3
@@ -287,7 +287,7 @@ spec:
                 - --health-probe-bind-address=:8081
                 command:
                 - /manager
-                image: ghcr.io/harsh098/signoz-alert-operator:v1.131.2
+                image: controller:latest
                 livenessProbe:
                   httpGet:
                     path: /healthz
