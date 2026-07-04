@@ -1,6 +1,6 @@
 module github.com/harsh098/signoz-alert-operator
 
-go 1.24.0
+go 1.26.4
 
 require (
 	github.com/oapi-codegen/runtime v1.4.0
