@@ -38,15 +38,17 @@ type AlertSpec struct {
 	// EndpointRef holds reference to the kind Endpoint
 	// the points at the target Signoz Instance
 	// +kubebuilder:validation:Required
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Endpoint Reference"
 	EndpointRef EndpointRefSpec `json:"endpointRef"`
 	// Rule is the SigNoz alert rule body (matches RuletypesPostableRule from
 	// the SigNoz API). Schema-validated server-side only at the top level —
 	// contents are forwarded verbatim to SigNoz.
 	// The current controller is wire compatible with
-	// https://signoz.io/api-reference/v0.127.0#/operations/CreateRule
+	// https://signoz.io/api-reference/v0.131.1#/operations/CreateRule
 	// +kubebuilder:validation:Schemaless
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +kubebuilder:validation:Required
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="SigNoz Rule Body"
 	Rule runtime.RawExtension `json:"rule"`
 }
 
@@ -54,14 +56,17 @@ type AlertSpec struct {
 type AlertStatus struct {
 	// RuleID is the SigNoz-assigned rule ID. Empty until first successful create.
 	// +optional
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="SigNoz Rule ID"
 	RuleID string `json:"ruleID,omitempty"`
 
 	// HTTPStatus is the HTTP status code from the most recent SigNoz API call.
 	// +optional
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Last HTTP Status"
 	HTTPStatus int `json:"httpStatus,omitempty"`
 
 	// Errors is the response body from the most recent non-2xx SigNoz API call. Empty on success.
 	// +optional
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Errors",xDescriptors={"urn:alm:descriptor:text"}
 	Errors string `json:"errors,omitempty"`
 }
 
