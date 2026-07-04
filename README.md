@@ -67,7 +67,8 @@ The operator's tag mirrors the SigNoz API version it was verified against. See [
 
 | Operator | SigNoz API (verified against) | Kubernetes | Notes |
 |---|---|---|---|
-| **v1.131.0** | v0.122.0 – v0.131.1 | 1.30+ | Latest. Verified against v0.131.1 (client regen + rule round-trip + unit tests). SigNoz's v5 builder-query schema now requires `signal` and query `type` discriminators (landed between v0.127 and v0.131); rule bodies must set them, the operator forwards verbatim so no caller change. |
+| **v1.131.2** | v0.122.0 – v0.131.1 | 1.30+ | Latest. Operator-only fix: Docker builder base bumped to `golang:1.26` for the `go 1.26.4` module directive. Same wire behaviour as v1.131.1. |
+| **v1.131.1** | v0.122.0 – v0.131.1 | 1.30+ | Verified against v0.131.1 (client regen + rule round-trip + unit tests). SigNoz's v5 builder-query schema now requires `signal` and query `type` discriminators (landed between v0.127 and v0.131); rule bodies must set them, the operator forwards verbatim so no caller change. |
 | **v1.127.0** | v0.122.0 – v0.127.0 | 1.30+ | e2e run against v0.127.0; wire-compat verified across the full range — only `ErrorsJSON` gained additive optional fields between v0.124 and v0.127, no caller impact. |
 | **v1.124.1** | v0.124.0 | 1.30+ | Bugfix: `kubectl delete alert` no longer hangs after the SigNoz-side rule was removed via the UI. |
 | **v1.124.0** | v0.124.0 | 1.30+ | First v0.124-line release. The new `/api/v2/infra_monitoring/*` endpoints in SigNoz don't affect the operator. |
@@ -81,7 +82,7 @@ The "verified against" column reflects what each tagged release was exercised ag
 
 The operator uses a **mirror-version** scheme: an operator tag `v1.X.Y` corresponds to SigNoz upstream `v0.X.0`. The `1` prefix marks this as the operator's v1 line; `X` tracks SigNoz; `Y` is the operator's own patch counter (wire-compat doesn't move on a patch bump).
 
-Read `v1.131.0` as: "operator v1 line, verified against SigNoz v0.131.x, initial release for that line."
+Read `v1.131.2` as: "operator v1 line, verified against SigNoz v0.131.x, third release for that line."
 
 This keeps the support story self-documenting — a user on SigNoz v0.131.x knows to pull operator `v1.131.x` — and lets us ship operator-only bugfixes without confusion about which SigNoz version they target.
 

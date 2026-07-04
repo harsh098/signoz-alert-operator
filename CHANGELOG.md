@@ -1,6 +1,16 @@
 # Changelog
 
-## [1.131.0] - 2026-07-04
+## [1.131.2] - 2026-07-04
+
+### Fixed
+- Docker builder base image bumped `golang:1.24` → `golang:1.26` to satisfy the
+  `go 1.26.4` module directive; `make docker-build` (and therefore the e2e
+  `BeforeSuite` and the release image build) no longer fails with
+  `go.mod requires go >= 1.26.4 (running go 1.24.x; GOTOOLCHAIN=local)`.
+
+Operator-only fix; no wire change and no CRD change.
+
+## [1.131.1] - 2026-07-04
 
 ### Added
 - Periodic drift reconcile: a successful reconcile now re-queues the Alert on a
