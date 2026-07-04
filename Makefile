@@ -3,7 +3,7 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.0.1
+VERSION ?= 1.131.0
 
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "candidate,fast,stable")
@@ -126,37 +126,38 @@ test: manifests generate fmt vet setup-envtest ## Run tests.
 #   - CERT_MANAGER_INSTALL_SKIP=true
 K3D ?= k3d
 K3D_CLUSTER ?= signoz-alert-operator-test-e2e
-SIGNOZ_VERSION ?= v0.127.0
-SIGNOZ_VENDOR_DIR ?= test/e2e/signoz-vendor
-SIGNOZ_COMPOSE_DIR ?= $(SIGNOZ_VENDOR_DIR)/deploy/docker
+SIGNOZ_VERSION ?= v0.131.1
+FOUNDRY ?= $(LOCALBIN)/foundryctl
+FOUNDRY_VERSION ?= v0.2.11
+SIGNOZ_POURS_DIR ?= test/e2e/pours
+SIGNOZ_COMPOSE ?= $(SIGNOZ_POURS_DIR)/deployment/compose.yaml
+SIGNOZ_CASTING ?= test/e2e/casting.yaml
 
-# Fetch the SigNoz deploy/ tree at the pinned version. Cached by version tag —
-# bumping SIGNOZ_VERSION triggers a re-fetch. The directory is gitignored.
-#
-# Why the post-fetch prune: sparse-checkout cone mode keeps the repo's root
-# files (go.mod, go.sum, .golangci.yml, README*, LICENSE, etc.) in addition
-# to deploy/. We only need deploy/, and the leftover go.mod (which requires
-# Go 1.25.7) trips controller-gen's package loader in CI where setup-go pins
-# GOTOOLCHAIN=local with our project's Go 1.24. Locally it's masked because
-# the developer's Go is high enough.
-$(SIGNOZ_VENDOR_DIR)/.fetched-$(SIGNOZ_VERSION):
-	rm -rf $(SIGNOZ_VENDOR_DIR)
-	mkdir -p $(SIGNOZ_VENDOR_DIR)
-	@echo "Fetching SigNoz $(SIGNOZ_VERSION) deploy/ tree..."
-	git clone --depth 1 --branch $(SIGNOZ_VERSION) --filter=blob:none --sparse \
-		https://github.com/SigNoz/signoz.git $(SIGNOZ_VENDOR_DIR)
-	cd $(SIGNOZ_VENDOR_DIR) && git sparse-checkout set deploy
-	rm -rf $(SIGNOZ_VENDOR_DIR)/.git
-	find $(SIGNOZ_VENDOR_DIR) -mindepth 1 -maxdepth 1 \
-		-not -name deploy \
-		-not -name '.fetched-*' \
-		-exec rm -rf {} +
-	touch $@
+# SigNoz dropped the vendored deploy/ docker-compose files as of v0.130.0 in
+# favour of Foundry (foundryctl). We render a standard compose.yaml from a
+# declarative casting file and drive it with plain docker compose — Foundry
+# only replaces the file-acquisition step; up / health-wait / teardown stay
+# ordinary docker compose. Both $(SIGNOZ_CASTING) and $(SIGNOZ_POURS_DIR) are
+# generated and gitignored.
+.PHONY: foundryctl
+foundryctl: $(FOUNDRY) ## Install pinned foundryctl into ./bin.
+$(FOUNDRY):
+	@mkdir -p $(LOCALBIN)
+	curl -fsSL https://signoz.io/foundry.sh | \
+		FOUNDRY_VERSION=$(FOUNDRY_VERSION) FOUNDRY_INSTALL_DIR=$(LOCALBIN) FOUNDRY_ASSUME_YES=1 bash
+
+# Render casting.yaml from the template with the pinned SigNoz version (Foundry
+# wants the tag without the leading 'v', e.g. 0.131.1) and forge the compose
+# files into $(SIGNOZ_POURS_DIR).
+.PHONY: signoz-render
+signoz-render: foundryctl
+	SIGNOZ_VERSION_NO_V=$(SIGNOZ_VERSION:v%=%) envsubst '$$SIGNOZ_VERSION_NO_V' \
+		< test/e2e/casting.yaml.tmpl > $(SIGNOZ_CASTING)
+	$(FOUNDRY) forge -f $(SIGNOZ_CASTING) -p $(SIGNOZ_POURS_DIR) --no-updater --no-ledger
 
 .PHONY: signoz-up
-signoz-up: $(SIGNOZ_VENDOR_DIR)/.fetched-$(SIGNOZ_VERSION) ## Bring up SigNoz via docker-compose with the root-user override
-	cp test/e2e/signoz-override.yaml $(SIGNOZ_COMPOSE_DIR)/docker-compose.override.yaml
-	cd $(SIGNOZ_COMPOSE_DIR) && VERSION=$(SIGNOZ_VERSION) docker compose up -d
+signoz-up: signoz-render ## Render + bring up SigNoz via the Foundry-generated docker compose
+	docker compose -f $(SIGNOZ_COMPOSE) up -d
 	@echo "Waiting for SigNoz /api/v1/health..."
 	@for i in $$(seq 1 120); do \
 		if curl -sf http://localhost:8080/api/v1/health >/dev/null 2>&1; then \
@@ -167,15 +168,15 @@ signoz-up: $(SIGNOZ_VENDOR_DIR)/.fetched-$(SIGNOZ_VERSION) ## Bring up SigNoz vi
 	echo "SigNoz did not become healthy in 240s"; exit 1
 
 .PHONY: signoz-down
-signoz-down: ## Tear down SigNoz via docker-compose (does not delete volumes)
-	@if [ -d $(SIGNOZ_COMPOSE_DIR) ]; then \
-		cd $(SIGNOZ_COMPOSE_DIR) && VERSION=$(SIGNOZ_VERSION) docker compose down; \
+signoz-down: ## Tear down SigNoz (does not delete volumes)
+	@if [ -f $(SIGNOZ_COMPOSE) ]; then \
+		docker compose -f $(SIGNOZ_COMPOSE) down; \
 	fi
 
 .PHONY: signoz-down-volumes
 signoz-down-volumes: ## Tear down SigNoz and wipe all data volumes
-	@if [ -d $(SIGNOZ_COMPOSE_DIR) ]; then \
-		cd $(SIGNOZ_COMPOSE_DIR) && VERSION=$(SIGNOZ_VERSION) docker compose down -v; \
+	@if [ -f $(SIGNOZ_COMPOSE) ]; then \
+		docker compose -f $(SIGNOZ_COMPOSE) down -v; \
 	fi
 
 .PHONY: setup-test-e2e

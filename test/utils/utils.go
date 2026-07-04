@@ -223,7 +223,7 @@ func WaitForSigNozReady(timeout time.Duration) error {
 
 // BootstrapSigNozAPIKey mints a service-account API key on a fresh SigNoz
 // instance via the public API. Requires that the root user has been
-// provisioned via SIGNOZ_USER_ROOT_* env vars (see test/e2e/signoz-override.yaml).
+// provisioned via SIGNOZ_USER_ROOT_* env vars (see test/e2e/casting.yaml.tmpl).
 //
 // Five HTTP calls:
 //  1. POST /api/v2/sessions/email_password  → JWT (uses email/password/orgID)

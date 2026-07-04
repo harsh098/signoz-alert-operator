@@ -1,0 +1,150 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+    categories: Monitoring
+    containerImage: ghcr.io/harsh098/signoz-alert-operator:v1.131.0
+    createdAt: "2026-07-04T00:00:00Z"
+    description: Declaratively manage SigNoz alert rules and instance endpoints as
+      Kubernetes custom resources.
+    repository: https://github.com/harsh098/signoz-alert-operator
+    support: Harsh Mishra
+  name: signoz-alert-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: Alert is the Schema for the alerts API.
+      displayName: Alert
+      kind: Alert
+      name: alerts.monitoring.hmx86.cloud
+      specDescriptors:
+      - description: |-
+          EndpointRef holds reference to the kind Endpoint
+          the points at the target Signoz Instance
+        displayName: Endpoint Reference
+        path: endpointRef
+      - description: |-
+          Rule is the SigNoz alert rule body (matches RuletypesPostableRule from
+          the SigNoz API). Schema-validated server-side only at the top level —
+          contents are forwarded verbatim to SigNoz.
+          The current controller is wire compatible with
+          https://signoz.io/api-reference/v0.131.1#/operations/CreateRule
+        displayName: SigNoz Rule Body
+        path: rule
+      statusDescriptors:
+      - description: Errors is the response body from the most recent non-2xx SigNoz
+          API call. Empty on success.
+        displayName: Errors
+        path: errors
+        x-descriptors:
+        - urn:alm:descriptor:text
+      - description: HTTPStatus is the HTTP status code from the most recent SigNoz
+          API call.
+        displayName: Last HTTP Status
+        path: httpStatus
+      - description: RuleID is the SigNoz-assigned rule ID. Empty until first successful
+          create.
+        displayName: SigNoz Rule ID
+        path: ruleID
+      version: v1alpha1
+    - description: Endpoint is the Schema for the endpoints API.
+      displayName: Endpoint
+      kind: Endpoint
+      name: endpoints.monitoring.hmx86.cloud
+      specDescriptors:
+      - description: |-
+          InstanceURL is the URL Endpoint starting with http:// or https:// for
+          the self-hosted or Signoz Cloud Instance.
+        displayName: SigNoz Instance URL
+        path: instanceURL
+        x-descriptors:
+        - urn:alm:descriptor:org.w3:link
+      - description: |-
+          SecretRef is the reference to the secret containing the API Key for Signoz.
+          Required if using Signoz Cloud.
+        displayName: API Key Secret Reference
+        path: secretKeyRef
+      - description: |-
+          Key within the Secret's data storing the required
+          API Key
+        displayName: API Key Secret Key
+        path: secretKeyRef.key
+      - description: Name of Secret containing the API Key
+        displayName: API Key Secret Name
+        path: secretKeyRef.name
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      version: v1alpha1
+  description: |
+    ## SigNoz Alert Operator
+
+    The SigNoz Alert Operator lets you manage [SigNoz](https://signoz.io) alert
+    rules declaratively as Kubernetes custom resources. Alert rule bodies live in
+    Git alongside the rest of your manifests and are reconciled into SigNoz through
+    its `/api/v2/rules` API — no clicking through the UI, no drift.
+
+    ### Custom Resources
+
+    * **Endpoint** — points at a SigNoz instance (Cloud or self-hosted) and
+      references a Secret containing an API key with rule write access.
+    * **Alert** — references an Endpoint and carries a SigNoz rule body in
+      `spec.rule`. The rule is a schemaless field forwarded verbatim, so the full
+      SigNoz rule schema is available without the operator needing to model it.
+
+    ### How it works
+
+    The controller reconciles each Alert against its Endpoint: it creates the rule
+    on first apply, updates it on change, and deletes it on removal. Idempotency
+    across clusters is handled with a `k8s_id` label stamped onto every managed
+    rule, so an Alert adopts a pre-existing SigNoz rule rather than duplicating it.
+
+    ### Getting started
+
+    1. Create a Secret with your SigNoz API key.
+    2. Create an `Endpoint` referencing that Secret and your instance URL.
+    3. Create `Alert` resources whose `spec.rule` holds your SigNoz rule bodies.
+
+    See the [usage guide](https://github.com/harsh098/signoz-alert-operator/blob/main/Usage.md)
+    for a full walkthrough, rule-body examples, and troubleshooting.
+  displayName: SigNoz Alert Operator
+  icon:
+  - base64data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iI2UwN2IzOSIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0zMiAxMmExMCAxMCAwIDAgMC0xMCAxMHY4bC00IDZ2MmgyOHYtMmwtNC02di04YTEwIDEwIDAgMCAwLTEwLTEwem0wIDQwYTUgNSAwIDAgMCA1LTVoLTEwYTUgNSAwIDAgMCA1IDV6Ii8+PC9zdmc+
+    mediatype: image/svg+xml
+  install:
+    spec:
+      deployments: []
+    strategy: deployment
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - signoz
+  - alerting
+  - alerts
+  - observability
+  - monitoring
+  - gitops
+  links:
+  - name: Documentation
+    url: https://github.com/harsh098/signoz-alert-operator/blob/main/Usage.md
+  - name: Source Code
+    url: https://github.com/harsh098/signoz-alert-operator
+  maintainers:
+  - email: hmisraji07@gmail.com
+    name: Harsh Mishra
+  maturity: alpha
+  minKubeVersion: 1.30.0
+  provider:
+    name: Harsh Mishra
+    url: https://github.com/harsh098/signoz-alert-operator
+  version: 0.0.0
