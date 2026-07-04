@@ -28,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -36,6 +37,8 @@ import (
 	monitoringv1alpha1 "github.com/harsh098/signoz-alert-operator/api/v1alpha1"
 	"github.com/harsh098/signoz-alert-operator/internal/signozclient"
 )
+
+const retryInterval = 5
 
 // AlertReconciler reconciles a Alert object
 type AlertReconciler struct {
@@ -144,7 +147,8 @@ func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		_ = r.Status().Update(ctx, &alert)
 	}
 
-	return ctrl.Result{}, nil
+	requeInterval := wait.Jitter(retryInterval*time.Minute, 0.1)
+	return ctrl.Result{RequeueAfter: requeInterval}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
