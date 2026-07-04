@@ -5,7 +5,7 @@ metadata:
     alm-examples: '[]'
     capabilities: Basic Install
     categories: Monitoring
-    containerImage: ghcr.io/harsh098/signoz-alert-operator:v1.131.0
+    containerImage: ghcr.io/harsh098/signoz-alert-operator:v1.131.2
     createdAt: "2026-07-04T00:00:00Z"
     description: Declaratively manage SigNoz alert rules and instance endpoints as
       Kubernetes custom resources.
@@ -110,9 +110,15 @@ spec:
 
     See the [usage guide](https://github.com/harsh098/signoz-alert-operator/blob/main/Usage.md)
     for a full walkthrough, rule-body examples, and troubleshooting.
+
+    ### Note
+
+    This is a community-maintained operator. It is not an official SigNoz product
+    and is not affiliated with, sponsored, or endorsed by SigNoz Inc. "SigNoz" is
+    used only to describe the system this operator interoperates with.
   displayName: SigNoz Alert Operator
   icon:
-  - base64data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iI2UwN2IzOSIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0zMiAxMmExMCAxMCAwIDAgMC0xMCAxMHY4bC00IDZ2MmgyOHYtMmwtNC02di04YTEwIDEwIDAgMCAwLTEwLTEwem0wIDQwYTUgNSAwIDAgMCA1LTVoLTEwYTUgNSAwIDAgMCA1IDV6Ii8+PC9zdmc+
+  - base64data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjNGI2YmZiIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMmIzZmIwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSIxMjgiIHJ4PSIyNiIgZmlsbD0idXJsKCNnKSIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik02NCAyNmEyMiAyMiAwIDAgMC0yMiAyMnYxNGwtOCAxMmE0IDQgMCAwIDAgMy40IDYuMmg1My4yQTQgNCAwIDAgMCA5NCA3NEw4NiA2MlY0OGEyMiAyMiAwIDAgMC0yMi0yMnoiLz48cGF0aCBmaWxsPSIjZmZmIiBkPSJNNTQgOTBhMTAgMTAgMCAwIDAgMjAgMHoiLz48Y2lyY2xlIGN4PSI5MiIgY3k9IjQwIiByPSIxMiIgZmlsbD0iI2ZmNWM1YyIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=
     mediatype: image/svg+xml
   install:
     spec:
