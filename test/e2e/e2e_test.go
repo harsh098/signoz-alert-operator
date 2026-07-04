@@ -265,7 +265,7 @@ var _ = Describe("Manager", Ordered, func() {
 	// on the host. The operator reaches it via host.k3d.internal:8080 (set by
 	// SIGNOZ_BASE_URL env from the Makefile).
 	//
-	// Auth flow (per test/e2e/signoz-override.yaml + utils.BootstrapSigNozAPIKey):
+	// Auth flow (per test/e2e/casting.yaml.tmpl + utils.BootstrapSigNozAPIKey):
 	//   1. SigNoz starts with a known root user/org via env vars
 	//   2. BootstrapSigNozAPIKey logs in, mints a service-account API key
 	//   3. That key goes into a K8s Secret, referenced from the Endpoint CR
@@ -283,7 +283,7 @@ var _ = Describe("Manager", Ordered, func() {
 			secretName    = "signoz-api-key"
 			secretKey     = "api-key"
 			adminEmail    = "admin@e2e.local"
-			adminPassword = "E2eAdmin#42Local!" //nolint:gosec // synthetic e2e credential matching test/e2e/signoz-override.yaml
+			adminPassword = "E2eAdmin#42Local!" //nolint:gosec // synthetic e2e credential matching test/e2e/casting.yaml.tmpl
 			adminOrgID    = "01923b8a-b8a8-7e88-a06a-2c5d7a44a3e1"
 		)
 		var (

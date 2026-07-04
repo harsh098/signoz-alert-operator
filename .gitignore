@@ -29,5 +29,6 @@ go.work
 # Kubeconfig might contain secrets
 *.kubeconfig
 
-# Vendored SigNoz deploy/ tree fetched by e2e setup (see Makefile SIGNOZ_VENDOR_DIR)
-test/e2e/signoz-vendor/
+# Foundry-generated e2e SigNoz deployment (see Makefile signoz-render)
+test/e2e/casting.yaml
+test/e2e/pours/

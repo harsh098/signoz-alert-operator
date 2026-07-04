@@ -27,11 +27,13 @@ import (
 type SecretKeyRefSpec struct {
 	// Name of Secret containing the API Key
 	// +kubebuilder:validation:MinLength=1
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="API Key Secret Name",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	Name string `json:"name"`
 
 	// Key within the Secret's data storing the required
 	// API Key
 	// +kubebuilder:validation:MinLength=1
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="API Key Secret Key"
 	Key string `json:"key"`
 }
 
@@ -40,13 +42,14 @@ type EndpointSpec struct {
 	// InstanceURL is the URL Endpoint starting with http:// or https:// for
 	// the self-hosted or Signoz Cloud Instance.
 	// +kubebuilder:validation:Required
-	// +operator-sdk:csv:customresourcedefinitions:type=[spec,status],displayName="Signoz Instance URL"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="SigNoz Instance URL",xDescriptors={"urn:alm:descriptor:org.w3:link"}
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:XValidation:rule="isURL(self) && (url(self).getScheme() == 'http' || url(self).getScheme() == 'https')",message="instanceURL must be a valid http or https URL"
 	InstanceURL string `json:"instanceURL"`
 	// SecretRef is the reference to the secret containing the API Key for Signoz.
 	// Required if using Signoz Cloud.
 	// +kubebuilder:validation:Optional
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="API Key Secret Reference"
 	SecretKeyRef *SecretKeyRefSpec `json:"secretKeyRef,omitempty"`
 }
 

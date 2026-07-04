@@ -1,0 +1,87 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  creationTimestamp: null
+  name: endpoints.monitoring.hmx86.cloud
+spec:
+  group: monitoring.hmx86.cloud
+  names:
+    kind: Endpoint
+    listKind: EndpointList
+    plural: endpoints
+    singular: endpoint
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Endpoint is the Schema for the endpoints API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: EndpointSpec defines the desired state of Endpoint.
+            properties:
+              instanceURL:
+                description: |-
+                  InstanceURL is the URL Endpoint starting with http:// or https:// for
+                  the self-hosted or Signoz Cloud Instance.
+                minLength: 1
+                type: string
+                x-kubernetes-validations:
+                - message: instanceURL must be a valid http or https URL
+                  rule: isURL(self) && (url(self).getScheme() == 'http' || url(self).getScheme()
+                    == 'https')
+              secretKeyRef:
+                description: |-
+                  SecretRef is the reference to the secret containing the API Key for Signoz.
+                  Required if using Signoz Cloud.
+                properties:
+                  key:
+                    description: |-
+                      Key within the Secret's data storing the required
+                      API Key
+                    minLength: 1
+                    type: string
+                  name:
+                    description: Name of Secret containing the API Key
+                    minLength: 1
+                    type: string
+                required:
+                - key
+                - name
+                type: object
+            required:
+            - instanceURL
+            type: object
+          status:
+            description: EndpointStatus defines the observed state of Endpoint.
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: null
+  storedVersions: null

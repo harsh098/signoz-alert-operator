@@ -85,6 +85,21 @@ const (
 	Desc Querybuildertypesv5OrderDirection = "desc"
 )
 
+// Defines values for Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregationSignal.
+const (
+	Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregationSignalLogs Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregationSignal = "logs"
+)
+
+// Defines values for Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregationSignal.
+const (
+	Metrics Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregationSignal = "metrics"
+)
+
+// Defines values for Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregationSignal.
+const (
+	Traces Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregationSignal = "traces"
+)
+
 // Defines values for Querybuildertypesv5QueryType.
 const (
 	Querybuildertypesv5QueryTypeBuilderFormula       Querybuildertypesv5QueryType = "builder_formula"
@@ -209,9 +224,9 @@ const (
 
 // Defines values for TelemetrytypesSignal.
 const (
-	Logs    TelemetrytypesSignal = "logs"
-	Metrics TelemetrytypesSignal = "metrics"
-	Traces  TelemetrytypesSignal = "traces"
+	TelemetrytypesSignalLogs    TelemetrytypesSignal = "logs"
+	TelemetrytypesSignalMetrics TelemetrytypesSignal = "metrics"
+	TelemetrytypesSignalTraces  TelemetrytypesSignal = "traces"
 )
 
 // Defines values for TelemetrytypesSource.
@@ -221,24 +236,24 @@ const (
 
 // ErrorsJSON defines model for ErrorsJSON.
 type ErrorsJSON struct {
-	Code              string                           `json:"code"`
-	Errors            *[]ErrorsResponseerroradditional `json:"errors,omitempty"`
-	InvalidReferences *[]string                        `json:"invalidReferences,omitempty"`
-	Message           string                           `json:"message"`
-	Retry             *ErrorsResponseretryjson         `json:"retry,omitempty"`
-	Suggestions       *[]string                        `json:"suggestions,omitempty"`
-	Type              *string                          `json:"type,omitempty"`
-	Url               *string                          `json:"url,omitempty"`
+	Code        string                          `json:"code"`
+	Errors      []ErrorsResponseerroradditional `json:"errors"`
+	Message     string                          `json:"message"`
+	Retry       *ErrorsResponseretryjson        `json:"retry,omitempty"`
+	Suggestions []string                        `json:"suggestions"`
+	Type        string                          `json:"type"`
+	Url         *string                         `json:"url,omitempty"`
 }
 
 // ErrorsResponseerroradditional defines model for ErrorsResponseerroradditional.
 type ErrorsResponseerroradditional struct {
-	Message *string `json:"message,omitempty"`
+	Message     string   `json:"message"`
+	Suggestions []string `json:"suggestions"`
 }
 
 // ErrorsResponseretryjson defines model for ErrorsResponseretryjson.
 type ErrorsResponseretryjson struct {
-	Delay *TimeDuration `json:"delay,omitempty"`
+	Delay TimeDuration `json:"delay"`
 }
 
 // MetrictypesComparisonSpaceAggregationParam defines model for MetrictypesComparisonSpaceAggregationParam.
@@ -255,6 +270,11 @@ type MetrictypesTemporality string
 
 // MetrictypesTimeAggregation defines model for MetrictypesTimeAggregation.
 type MetrictypesTimeAggregation string
+
+// Querybuildertypesv5BuilderQuerySpec defines model for Querybuildertypesv5BuilderQuerySpec.
+type Querybuildertypesv5BuilderQuerySpec struct {
+	union json.RawMessage
+}
 
 // Querybuildertypesv5ClickHouseQuery defines model for Querybuildertypesv5ClickHouseQuery.
 type Querybuildertypesv5ClickHouseQuery struct {
@@ -277,8 +297,19 @@ type Querybuildertypesv5Function struct {
 
 // Querybuildertypesv5FunctionArg defines model for Querybuildertypesv5FunctionArg.
 type Querybuildertypesv5FunctionArg struct {
-	Name  *string      `json:"name,omitempty"`
-	Value *interface{} `json:"value,omitempty"`
+	Name  *string                               `json:"name,omitempty"`
+	Value *Querybuildertypesv5FunctionArg_Value `json:"value,omitempty"`
+}
+
+// Querybuildertypesv5FunctionArgValue0 defines model for .
+type Querybuildertypesv5FunctionArgValue0 = float32
+
+// Querybuildertypesv5FunctionArgValue1 defines model for .
+type Querybuildertypesv5FunctionArgValue1 = string
+
+// Querybuildertypesv5FunctionArg_Value defines model for Querybuildertypesv5FunctionArg.Value.
+type Querybuildertypesv5FunctionArg_Value struct {
+	union json.RawMessage
 }
 
 // Querybuildertypesv5FunctionName defines model for Querybuildertypesv5FunctionName.
@@ -366,75 +397,84 @@ type Querybuildertypesv5QueryBuilderFormula struct {
 
 // Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation defines model for Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation.
 type Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation struct {
-	Aggregations          *[]Querybuildertypesv5LogAggregation       `json:"aggregations,omitempty"`
-	Cursor                *string                                    `json:"cursor,omitempty"`
-	Disabled              *bool                                      `json:"disabled,omitempty"`
-	Filter                *Querybuildertypesv5Filter                 `json:"filter,omitempty"`
-	Functions             *[]Querybuildertypesv5Function             `json:"functions,omitempty"`
-	GroupBy               *[]Querybuildertypesv5GroupByKey           `json:"groupBy,omitempty"`
-	Having                *Querybuildertypesv5Having                 `json:"having,omitempty"`
-	Legend                *string                                    `json:"legend,omitempty"`
-	Limit                 *int                                       `json:"limit,omitempty"`
-	LimitBy               *Querybuildertypesv5LimitBy                `json:"limitBy,omitempty"`
-	Name                  *string                                    `json:"name,omitempty"`
-	Offset                *int                                       `json:"offset,omitempty"`
-	Order                 *[]Querybuildertypesv5OrderBy              `json:"order,omitempty"`
-	SecondaryAggregations *[]Querybuildertypesv5SecondaryAggregation `json:"secondaryAggregations,omitempty"`
-	SelectFields          *[]TelemetrytypesTelemetryFieldKey         `json:"selectFields,omitempty"`
-	Signal                *TelemetrytypesSignal                      `json:"signal,omitempty"`
-	Source                *TelemetrytypesSource                      `json:"source,omitempty"`
+	Aggregations          *[]Querybuildertypesv5LogAggregation                                                                                      `json:"aggregations,omitempty"`
+	Cursor                *string                                                                                                                   `json:"cursor,omitempty"`
+	Disabled              *bool                                                                                                                     `json:"disabled,omitempty"`
+	Filter                *Querybuildertypesv5Filter                                                                                                `json:"filter,omitempty"`
+	Functions             *[]Querybuildertypesv5Function                                                                                            `json:"functions,omitempty"`
+	GroupBy               *[]Querybuildertypesv5GroupByKey                                                                                          `json:"groupBy,omitempty"`
+	Having                *Querybuildertypesv5Having                                                                                                `json:"having,omitempty"`
+	Legend                *string                                                                                                                   `json:"legend,omitempty"`
+	Limit                 *int                                                                                                                      `json:"limit,omitempty"`
+	LimitBy               *Querybuildertypesv5LimitBy                                                                                               `json:"limitBy,omitempty"`
+	Name                  *string                                                                                                                   `json:"name,omitempty"`
+	Offset                *int                                                                                                                      `json:"offset,omitempty"`
+	Order                 *[]Querybuildertypesv5OrderBy                                                                                             `json:"order,omitempty"`
+	SecondaryAggregations *[]Querybuildertypesv5SecondaryAggregation                                                                                `json:"secondaryAggregations,omitempty"`
+	SelectFields          *[]TelemetrytypesTelemetryFieldKey                                                                                        `json:"selectFields,omitempty"`
+	Signal                Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregationSignal `json:"signal"`
+	Source                *TelemetrytypesSource                                                                                                     `json:"source,omitempty"`
 
 	// StepInterval Step interval. Accepts a Go duration string (e.g., "60s", "1m", "1h") or a number representing seconds (e.g., 60).
 	StepInterval *Querybuildertypesv5Step `json:"stepInterval,omitempty"`
 }
+
+// Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregationSignal defines model for Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation.Signal.
+type Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregationSignal string
 
 // Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation defines model for Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation.
 type Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation struct {
-	Aggregations          *[]Querybuildertypesv5MetricAggregation    `json:"aggregations,omitempty"`
-	Cursor                *string                                    `json:"cursor,omitempty"`
-	Disabled              *bool                                      `json:"disabled,omitempty"`
-	Filter                *Querybuildertypesv5Filter                 `json:"filter,omitempty"`
-	Functions             *[]Querybuildertypesv5Function             `json:"functions,omitempty"`
-	GroupBy               *[]Querybuildertypesv5GroupByKey           `json:"groupBy,omitempty"`
-	Having                *Querybuildertypesv5Having                 `json:"having,omitempty"`
-	Legend                *string                                    `json:"legend,omitempty"`
-	Limit                 *int                                       `json:"limit,omitempty"`
-	LimitBy               *Querybuildertypesv5LimitBy                `json:"limitBy,omitempty"`
-	Name                  *string                                    `json:"name,omitempty"`
-	Offset                *int                                       `json:"offset,omitempty"`
-	Order                 *[]Querybuildertypesv5OrderBy              `json:"order,omitempty"`
-	SecondaryAggregations *[]Querybuildertypesv5SecondaryAggregation `json:"secondaryAggregations,omitempty"`
-	SelectFields          *[]TelemetrytypesTelemetryFieldKey         `json:"selectFields,omitempty"`
-	Signal                *TelemetrytypesSignal                      `json:"signal,omitempty"`
-	Source                *TelemetrytypesSource                      `json:"source,omitempty"`
+	Aggregations          *[]Querybuildertypesv5MetricAggregation                                                                                      `json:"aggregations,omitempty"`
+	Cursor                *string                                                                                                                      `json:"cursor,omitempty"`
+	Disabled              *bool                                                                                                                        `json:"disabled,omitempty"`
+	Filter                *Querybuildertypesv5Filter                                                                                                   `json:"filter,omitempty"`
+	Functions             *[]Querybuildertypesv5Function                                                                                               `json:"functions,omitempty"`
+	GroupBy               *[]Querybuildertypesv5GroupByKey                                                                                             `json:"groupBy,omitempty"`
+	Having                *Querybuildertypesv5Having                                                                                                   `json:"having,omitempty"`
+	Legend                *string                                                                                                                      `json:"legend,omitempty"`
+	Limit                 *int                                                                                                                         `json:"limit,omitempty"`
+	LimitBy               *Querybuildertypesv5LimitBy                                                                                                  `json:"limitBy,omitempty"`
+	Name                  *string                                                                                                                      `json:"name,omitempty"`
+	Offset                *int                                                                                                                         `json:"offset,omitempty"`
+	Order                 *[]Querybuildertypesv5OrderBy                                                                                                `json:"order,omitempty"`
+	SecondaryAggregations *[]Querybuildertypesv5SecondaryAggregation                                                                                   `json:"secondaryAggregations,omitempty"`
+	SelectFields          *[]TelemetrytypesTelemetryFieldKey                                                                                           `json:"selectFields,omitempty"`
+	Signal                Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregationSignal `json:"signal"`
+	Source                *TelemetrytypesSource                                                                                                        `json:"source,omitempty"`
 
 	// StepInterval Step interval. Accepts a Go duration string (e.g., "60s", "1m", "1h") or a number representing seconds (e.g., 60).
 	StepInterval *Querybuildertypesv5Step `json:"stepInterval,omitempty"`
 }
+
+// Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregationSignal defines model for Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation.Signal.
+type Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregationSignal string
 
 // Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation defines model for Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation.
 type Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation struct {
-	Aggregations          *[]Querybuildertypesv5TraceAggregation     `json:"aggregations,omitempty"`
-	Cursor                *string                                    `json:"cursor,omitempty"`
-	Disabled              *bool                                      `json:"disabled,omitempty"`
-	Filter                *Querybuildertypesv5Filter                 `json:"filter,omitempty"`
-	Functions             *[]Querybuildertypesv5Function             `json:"functions,omitempty"`
-	GroupBy               *[]Querybuildertypesv5GroupByKey           `json:"groupBy,omitempty"`
-	Having                *Querybuildertypesv5Having                 `json:"having,omitempty"`
-	Legend                *string                                    `json:"legend,omitempty"`
-	Limit                 *int                                       `json:"limit,omitempty"`
-	LimitBy               *Querybuildertypesv5LimitBy                `json:"limitBy,omitempty"`
-	Name                  *string                                    `json:"name,omitempty"`
-	Offset                *int                                       `json:"offset,omitempty"`
-	Order                 *[]Querybuildertypesv5OrderBy              `json:"order,omitempty"`
-	SecondaryAggregations *[]Querybuildertypesv5SecondaryAggregation `json:"secondaryAggregations,omitempty"`
-	SelectFields          *[]TelemetrytypesTelemetryFieldKey         `json:"selectFields,omitempty"`
-	Signal                *TelemetrytypesSignal                      `json:"signal,omitempty"`
-	Source                *TelemetrytypesSource                      `json:"source,omitempty"`
+	Aggregations          *[]Querybuildertypesv5TraceAggregation                                                                                      `json:"aggregations,omitempty"`
+	Cursor                *string                                                                                                                     `json:"cursor,omitempty"`
+	Disabled              *bool                                                                                                                       `json:"disabled,omitempty"`
+	Filter                *Querybuildertypesv5Filter                                                                                                  `json:"filter,omitempty"`
+	Functions             *[]Querybuildertypesv5Function                                                                                              `json:"functions,omitempty"`
+	GroupBy               *[]Querybuildertypesv5GroupByKey                                                                                            `json:"groupBy,omitempty"`
+	Having                *Querybuildertypesv5Having                                                                                                  `json:"having,omitempty"`
+	Legend                *string                                                                                                                     `json:"legend,omitempty"`
+	Limit                 *int                                                                                                                        `json:"limit,omitempty"`
+	LimitBy               *Querybuildertypesv5LimitBy                                                                                                 `json:"limitBy,omitempty"`
+	Name                  *string                                                                                                                     `json:"name,omitempty"`
+	Offset                *int                                                                                                                        `json:"offset,omitempty"`
+	Order                 *[]Querybuildertypesv5OrderBy                                                                                               `json:"order,omitempty"`
+	SecondaryAggregations *[]Querybuildertypesv5SecondaryAggregation                                                                                  `json:"secondaryAggregations,omitempty"`
+	SelectFields          *[]TelemetrytypesTelemetryFieldKey                                                                                          `json:"selectFields,omitempty"`
+	Signal                Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregationSignal `json:"signal"`
+	Source                *TelemetrytypesSource                                                                                                       `json:"source,omitempty"`
 
 	// StepInterval Step interval. Accepts a Go duration string (e.g., "60s", "1m", "1h") or a number representing seconds (e.g., 60).
 	StepInterval *Querybuildertypesv5Step `json:"stepInterval,omitempty"`
 }
+
+// Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregationSignal defines model for Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation.Signal.
+type Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregationSignal string
 
 // Querybuildertypesv5QueryBuilderTraceOperator defines model for Querybuildertypesv5QueryBuilderTraceOperator.
 type Querybuildertypesv5QueryBuilderTraceOperator struct {
@@ -460,51 +500,37 @@ type Querybuildertypesv5QueryBuilderTraceOperator struct {
 
 // Querybuildertypesv5QueryEnvelope defines model for Querybuildertypesv5QueryEnvelope.
 type Querybuildertypesv5QueryEnvelope struct {
-	Spec  *interface{}                  `json:"spec,omitempty"`
-	Type  *Querybuildertypesv5QueryType `json:"type,omitempty"`
 	union json.RawMessage
 }
 
-// Querybuildertypesv5QueryEnvelopeBuilderLog defines model for Querybuildertypesv5QueryEnvelopeBuilderLog.
-type Querybuildertypesv5QueryEnvelopeBuilderLog struct {
-	Spec *Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation `json:"spec,omitempty"`
-	Type *Querybuildertypesv5QueryType                                                                                        `json:"type,omitempty"`
-}
-
-// Querybuildertypesv5QueryEnvelopeBuilderMetric defines model for Querybuildertypesv5QueryEnvelopeBuilderMetric.
-type Querybuildertypesv5QueryEnvelopeBuilderMetric struct {
-	Spec *Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation `json:"spec,omitempty"`
-	Type *Querybuildertypesv5QueryType                                                                                           `json:"type,omitempty"`
-}
-
-// Querybuildertypesv5QueryEnvelopeBuilderTrace defines model for Querybuildertypesv5QueryEnvelopeBuilderTrace.
-type Querybuildertypesv5QueryEnvelopeBuilderTrace struct {
-	Spec *Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation `json:"spec,omitempty"`
-	Type *Querybuildertypesv5QueryType                                                                                          `json:"type,omitempty"`
+// Querybuildertypesv5QueryEnvelopeBuilder defines model for Querybuildertypesv5QueryEnvelopeBuilder.
+type Querybuildertypesv5QueryEnvelopeBuilder struct {
+	Spec *Querybuildertypesv5BuilderQuerySpec `json:"spec,omitempty"`
+	Type Querybuildertypesv5QueryType         `json:"type"`
 }
 
 // Querybuildertypesv5QueryEnvelopeClickHouseSQL defines model for Querybuildertypesv5QueryEnvelopeClickHouseSQL.
 type Querybuildertypesv5QueryEnvelopeClickHouseSQL struct {
 	Spec *Querybuildertypesv5ClickHouseQuery `json:"spec,omitempty"`
-	Type *Querybuildertypesv5QueryType       `json:"type,omitempty"`
+	Type Querybuildertypesv5QueryType        `json:"type"`
 }
 
 // Querybuildertypesv5QueryEnvelopeFormula defines model for Querybuildertypesv5QueryEnvelopeFormula.
 type Querybuildertypesv5QueryEnvelopeFormula struct {
 	Spec *Querybuildertypesv5QueryBuilderFormula `json:"spec,omitempty"`
-	Type *Querybuildertypesv5QueryType           `json:"type,omitempty"`
+	Type Querybuildertypesv5QueryType            `json:"type"`
 }
 
 // Querybuildertypesv5QueryEnvelopePromQL defines model for Querybuildertypesv5QueryEnvelopePromQL.
 type Querybuildertypesv5QueryEnvelopePromQL struct {
 	Spec *Querybuildertypesv5PromQuery `json:"spec,omitempty"`
-	Type *Querybuildertypesv5QueryType `json:"type,omitempty"`
+	Type Querybuildertypesv5QueryType  `json:"type"`
 }
 
 // Querybuildertypesv5QueryEnvelopeTraceOperator defines model for Querybuildertypesv5QueryEnvelopeTraceOperator.
 type Querybuildertypesv5QueryEnvelopeTraceOperator struct {
 	Spec *Querybuildertypesv5QueryBuilderTraceOperator `json:"spec,omitempty"`
-	Type *Querybuildertypesv5QueryType                 `json:"type,omitempty"`
+	Type Querybuildertypesv5QueryType                  `json:"type"`
 }
 
 // Querybuildertypesv5QueryType defines model for Querybuildertypesv5QueryType.
@@ -763,22 +789,24 @@ type CreateRuleJSONRequestBody = RuletypesPostableRule
 // UpdateRuleByIDJSONRequestBody defines body for UpdateRuleByID for application/json ContentType.
 type UpdateRuleByIDJSONRequestBody = RuletypesPostableRule
 
-// AsQuerybuildertypesv5QueryEnvelopeBuilderTrace returns the union data inside the Querybuildertypesv5QueryEnvelope as a Querybuildertypesv5QueryEnvelopeBuilderTrace
-func (t Querybuildertypesv5QueryEnvelope) AsQuerybuildertypesv5QueryEnvelopeBuilderTrace() (Querybuildertypesv5QueryEnvelopeBuilderTrace, error) {
-	var body Querybuildertypesv5QueryEnvelopeBuilderTrace
+// AsQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation returns the union data inside the Querybuildertypesv5BuilderQuerySpec as a Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation
+func (t Querybuildertypesv5BuilderQuerySpec) AsQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation() (Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation, error) {
+	var body Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromQuerybuildertypesv5QueryEnvelopeBuilderTrace overwrites any union data inside the Querybuildertypesv5QueryEnvelope as the provided Querybuildertypesv5QueryEnvelopeBuilderTrace
-func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeBuilderTrace(v Querybuildertypesv5QueryEnvelopeBuilderTrace) error {
+// FromQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation overwrites any union data inside the Querybuildertypesv5BuilderQuerySpec as the provided Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation
+func (t *Querybuildertypesv5BuilderQuerySpec) FromQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation(v Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation) error {
+	v.Signal = "traces"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeQuerybuildertypesv5QueryEnvelopeBuilderTrace performs a merge with any union data inside the Querybuildertypesv5QueryEnvelope, using the provided Querybuildertypesv5QueryEnvelopeBuilderTrace
-func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelopeBuilderTrace(v Querybuildertypesv5QueryEnvelopeBuilderTrace) error {
+// MergeQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation performs a merge with any union data inside the Querybuildertypesv5BuilderQuerySpec, using the provided Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation
+func (t *Querybuildertypesv5BuilderQuerySpec) MergeQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation(v Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation) error {
+	v.Signal = "traces"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -789,22 +817,24 @@ func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelope
 	return err
 }
 
-// AsQuerybuildertypesv5QueryEnvelopeBuilderLog returns the union data inside the Querybuildertypesv5QueryEnvelope as a Querybuildertypesv5QueryEnvelopeBuilderLog
-func (t Querybuildertypesv5QueryEnvelope) AsQuerybuildertypesv5QueryEnvelopeBuilderLog() (Querybuildertypesv5QueryEnvelopeBuilderLog, error) {
-	var body Querybuildertypesv5QueryEnvelopeBuilderLog
+// AsQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation returns the union data inside the Querybuildertypesv5BuilderQuerySpec as a Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation
+func (t Querybuildertypesv5BuilderQuerySpec) AsQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation() (Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation, error) {
+	var body Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromQuerybuildertypesv5QueryEnvelopeBuilderLog overwrites any union data inside the Querybuildertypesv5QueryEnvelope as the provided Querybuildertypesv5QueryEnvelopeBuilderLog
-func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeBuilderLog(v Querybuildertypesv5QueryEnvelopeBuilderLog) error {
+// FromQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation overwrites any union data inside the Querybuildertypesv5BuilderQuerySpec as the provided Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation
+func (t *Querybuildertypesv5BuilderQuerySpec) FromQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation(v Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation) error {
+	v.Signal = "logs"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeQuerybuildertypesv5QueryEnvelopeBuilderLog performs a merge with any union data inside the Querybuildertypesv5QueryEnvelope, using the provided Querybuildertypesv5QueryEnvelopeBuilderLog
-func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelopeBuilderLog(v Querybuildertypesv5QueryEnvelopeBuilderLog) error {
+// MergeQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation performs a merge with any union data inside the Querybuildertypesv5BuilderQuerySpec, using the provided Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation
+func (t *Querybuildertypesv5BuilderQuerySpec) MergeQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation(v Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation) error {
+	v.Signal = "logs"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -815,22 +845,149 @@ func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelope
 	return err
 }
 
-// AsQuerybuildertypesv5QueryEnvelopeBuilderMetric returns the union data inside the Querybuildertypesv5QueryEnvelope as a Querybuildertypesv5QueryEnvelopeBuilderMetric
-func (t Querybuildertypesv5QueryEnvelope) AsQuerybuildertypesv5QueryEnvelopeBuilderMetric() (Querybuildertypesv5QueryEnvelopeBuilderMetric, error) {
-	var body Querybuildertypesv5QueryEnvelopeBuilderMetric
+// AsQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation returns the union data inside the Querybuildertypesv5BuilderQuerySpec as a Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation
+func (t Querybuildertypesv5BuilderQuerySpec) AsQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation() (Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation, error) {
+	var body Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromQuerybuildertypesv5QueryEnvelopeBuilderMetric overwrites any union data inside the Querybuildertypesv5QueryEnvelope as the provided Querybuildertypesv5QueryEnvelopeBuilderMetric
-func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeBuilderMetric(v Querybuildertypesv5QueryEnvelopeBuilderMetric) error {
+// FromQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation overwrites any union data inside the Querybuildertypesv5BuilderQuerySpec as the provided Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation
+func (t *Querybuildertypesv5BuilderQuerySpec) FromQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation(v Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation) error {
+	v.Signal = "metrics"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeQuerybuildertypesv5QueryEnvelopeBuilderMetric performs a merge with any union data inside the Querybuildertypesv5QueryEnvelope, using the provided Querybuildertypesv5QueryEnvelopeBuilderMetric
-func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelopeBuilderMetric(v Querybuildertypesv5QueryEnvelopeBuilderMetric) error {
+// MergeQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation performs a merge with any union data inside the Querybuildertypesv5BuilderQuerySpec, using the provided Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation
+func (t *Querybuildertypesv5BuilderQuerySpec) MergeQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation(v Querybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation) error {
+	v.Signal = "metrics"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t Querybuildertypesv5BuilderQuerySpec) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"signal"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t Querybuildertypesv5BuilderQuerySpec) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "logs":
+		return t.AsQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5LogAggregation()
+	case "metrics":
+		return t.AsQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5MetricAggregation()
+	case "traces":
+		return t.AsQuerybuildertypesv5QueryBuilderQueryGithubComSigNozSignozPkgTypesQuerybuildertypesQuerybuildertypesv5TraceAggregation()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t Querybuildertypesv5BuilderQuerySpec) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *Querybuildertypesv5BuilderQuerySpec) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsQuerybuildertypesv5FunctionArgValue0 returns the union data inside the Querybuildertypesv5FunctionArg_Value as a Querybuildertypesv5FunctionArgValue0
+func (t Querybuildertypesv5FunctionArg_Value) AsQuerybuildertypesv5FunctionArgValue0() (Querybuildertypesv5FunctionArgValue0, error) {
+	var body Querybuildertypesv5FunctionArgValue0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromQuerybuildertypesv5FunctionArgValue0 overwrites any union data inside the Querybuildertypesv5FunctionArg_Value as the provided Querybuildertypesv5FunctionArgValue0
+func (t *Querybuildertypesv5FunctionArg_Value) FromQuerybuildertypesv5FunctionArgValue0(v Querybuildertypesv5FunctionArgValue0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeQuerybuildertypesv5FunctionArgValue0 performs a merge with any union data inside the Querybuildertypesv5FunctionArg_Value, using the provided Querybuildertypesv5FunctionArgValue0
+func (t *Querybuildertypesv5FunctionArg_Value) MergeQuerybuildertypesv5FunctionArgValue0(v Querybuildertypesv5FunctionArgValue0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsQuerybuildertypesv5FunctionArgValue1 returns the union data inside the Querybuildertypesv5FunctionArg_Value as a Querybuildertypesv5FunctionArgValue1
+func (t Querybuildertypesv5FunctionArg_Value) AsQuerybuildertypesv5FunctionArgValue1() (Querybuildertypesv5FunctionArgValue1, error) {
+	var body Querybuildertypesv5FunctionArgValue1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromQuerybuildertypesv5FunctionArgValue1 overwrites any union data inside the Querybuildertypesv5FunctionArg_Value as the provided Querybuildertypesv5FunctionArgValue1
+func (t *Querybuildertypesv5FunctionArg_Value) FromQuerybuildertypesv5FunctionArgValue1(v Querybuildertypesv5FunctionArgValue1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeQuerybuildertypesv5FunctionArgValue1 performs a merge with any union data inside the Querybuildertypesv5FunctionArg_Value, using the provided Querybuildertypesv5FunctionArgValue1
+func (t *Querybuildertypesv5FunctionArg_Value) MergeQuerybuildertypesv5FunctionArgValue1(v Querybuildertypesv5FunctionArgValue1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t Querybuildertypesv5FunctionArg_Value) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *Querybuildertypesv5FunctionArg_Value) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsQuerybuildertypesv5QueryEnvelopeBuilder returns the union data inside the Querybuildertypesv5QueryEnvelope as a Querybuildertypesv5QueryEnvelopeBuilder
+func (t Querybuildertypesv5QueryEnvelope) AsQuerybuildertypesv5QueryEnvelopeBuilder() (Querybuildertypesv5QueryEnvelopeBuilder, error) {
+	var body Querybuildertypesv5QueryEnvelopeBuilder
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromQuerybuildertypesv5QueryEnvelopeBuilder overwrites any union data inside the Querybuildertypesv5QueryEnvelope as the provided Querybuildertypesv5QueryEnvelopeBuilder
+func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeBuilder(v Querybuildertypesv5QueryEnvelopeBuilder) error {
+	v.Type = "builder_query"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeQuerybuildertypesv5QueryEnvelopeBuilder performs a merge with any union data inside the Querybuildertypesv5QueryEnvelope, using the provided Querybuildertypesv5QueryEnvelopeBuilder
+func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelopeBuilder(v Querybuildertypesv5QueryEnvelopeBuilder) error {
+	v.Type = "builder_query"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -850,6 +1007,7 @@ func (t Querybuildertypesv5QueryEnvelope) AsQuerybuildertypesv5QueryEnvelopeForm
 
 // FromQuerybuildertypesv5QueryEnvelopeFormula overwrites any union data inside the Querybuildertypesv5QueryEnvelope as the provided Querybuildertypesv5QueryEnvelopeFormula
 func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeFormula(v Querybuildertypesv5QueryEnvelopeFormula) error {
+	v.Type = "builder_formula"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -857,6 +1015,7 @@ func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeF
 
 // MergeQuerybuildertypesv5QueryEnvelopeFormula performs a merge with any union data inside the Querybuildertypesv5QueryEnvelope, using the provided Querybuildertypesv5QueryEnvelopeFormula
 func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelopeFormula(v Querybuildertypesv5QueryEnvelopeFormula) error {
+	v.Type = "builder_formula"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -876,6 +1035,7 @@ func (t Querybuildertypesv5QueryEnvelope) AsQuerybuildertypesv5QueryEnvelopeTrac
 
 // FromQuerybuildertypesv5QueryEnvelopeTraceOperator overwrites any union data inside the Querybuildertypesv5QueryEnvelope as the provided Querybuildertypesv5QueryEnvelopeTraceOperator
 func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeTraceOperator(v Querybuildertypesv5QueryEnvelopeTraceOperator) error {
+	v.Type = "builder_trace_operator"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -883,6 +1043,7 @@ func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeT
 
 // MergeQuerybuildertypesv5QueryEnvelopeTraceOperator performs a merge with any union data inside the Querybuildertypesv5QueryEnvelope, using the provided Querybuildertypesv5QueryEnvelopeTraceOperator
 func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelopeTraceOperator(v Querybuildertypesv5QueryEnvelopeTraceOperator) error {
+	v.Type = "builder_trace_operator"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -902,6 +1063,7 @@ func (t Querybuildertypesv5QueryEnvelope) AsQuerybuildertypesv5QueryEnvelopeProm
 
 // FromQuerybuildertypesv5QueryEnvelopePromQL overwrites any union data inside the Querybuildertypesv5QueryEnvelope as the provided Querybuildertypesv5QueryEnvelopePromQL
 func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopePromQL(v Querybuildertypesv5QueryEnvelopePromQL) error {
+	v.Type = "promql"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -909,6 +1071,7 @@ func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeP
 
 // MergeQuerybuildertypesv5QueryEnvelopePromQL performs a merge with any union data inside the Querybuildertypesv5QueryEnvelope, using the provided Querybuildertypesv5QueryEnvelopePromQL
 func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelopePromQL(v Querybuildertypesv5QueryEnvelopePromQL) error {
+	v.Type = "promql"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -928,6 +1091,7 @@ func (t Querybuildertypesv5QueryEnvelope) AsQuerybuildertypesv5QueryEnvelopeClic
 
 // FromQuerybuildertypesv5QueryEnvelopeClickHouseSQL overwrites any union data inside the Querybuildertypesv5QueryEnvelope as the provided Querybuildertypesv5QueryEnvelopeClickHouseSQL
 func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeClickHouseSQL(v Querybuildertypesv5QueryEnvelopeClickHouseSQL) error {
+	v.Type = "clickhouse_sql"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -935,6 +1099,7 @@ func (t *Querybuildertypesv5QueryEnvelope) FromQuerybuildertypesv5QueryEnvelopeC
 
 // MergeQuerybuildertypesv5QueryEnvelopeClickHouseSQL performs a merge with any union data inside the Querybuildertypesv5QueryEnvelope, using the provided Querybuildertypesv5QueryEnvelopeClickHouseSQL
 func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelopeClickHouseSQL(v Querybuildertypesv5QueryEnvelopeClickHouseSQL) error {
+	v.Type = "clickhouse_sql"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -945,61 +1110,42 @@ func (t *Querybuildertypesv5QueryEnvelope) MergeQuerybuildertypesv5QueryEnvelope
 	return err
 }
 
-func (t Querybuildertypesv5QueryEnvelope) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
+func (t Querybuildertypesv5QueryEnvelope) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"type"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t Querybuildertypesv5QueryEnvelope) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
 	if err != nil {
 		return nil, err
 	}
-	object := make(map[string]json.RawMessage)
-	if t.union != nil {
-		err = json.Unmarshal(b, &object)
-		if err != nil {
-			return nil, err
-		}
+	switch discriminator {
+	case "builder_formula":
+		return t.AsQuerybuildertypesv5QueryEnvelopeFormula()
+	case "builder_query":
+		return t.AsQuerybuildertypesv5QueryEnvelopeBuilder()
+	case "builder_trace_operator":
+		return t.AsQuerybuildertypesv5QueryEnvelopeTraceOperator()
+	case "clickhouse_sql":
+		return t.AsQuerybuildertypesv5QueryEnvelopeClickHouseSQL()
+	case "promql":
+		return t.AsQuerybuildertypesv5QueryEnvelopePromQL()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}
+}
 
-	if t.Spec != nil {
-		object["spec"], err = json.Marshal(t.Spec)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'spec': %w", err)
-		}
-	}
-
-	if t.Type != nil {
-		object["type"], err = json.Marshal(t.Type)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'type': %w", err)
-		}
-	}
-	b, err = json.Marshal(object)
+func (t Querybuildertypesv5QueryEnvelope) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
 	return b, err
 }
 
 func (t *Querybuildertypesv5QueryEnvelope) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
-	if err != nil {
-		return err
-	}
-	object := make(map[string]json.RawMessage)
-	err = json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["spec"]; found {
-		err = json.Unmarshal(raw, &t.Spec)
-		if err != nil {
-			return fmt.Errorf("error reading 'spec': %w", err)
-		}
-	}
-
-	if raw, found := object["type"]; found {
-		err = json.Unmarshal(raw, &t.Type)
-		if err != nil {
-			return fmt.Errorf("error reading 'type': %w", err)
-		}
-	}
-
 	return err
 }
 

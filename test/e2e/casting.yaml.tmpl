@@ -1,0 +1,32 @@
+# Foundry casting template for the e2e SigNoz stack.
+#
+# `make signoz-render` runs this through `envsubst` (substituting only
+# ${SIGNOZ_VERSION_NO_V} from the Makefile's SIGNOZ_VERSION) to produce
+# test/e2e/casting.yaml, then `foundryctl forge` renders the docker compose
+# files into test/e2e/pours/. Both outputs are gitignored.
+#
+# The root user + org are provisioned here via signoz.spec.env (this replaces
+# the old docker-compose.override.yaml) so the e2e bootstrap can log in and
+# mint a service-account API key without any UI interaction.
+# Docs: https://signoz.io/docs/manage/administrator-guide/configuration/root-user/
+apiVersion: v1alpha1
+kind: Installation
+metadata:
+  name: signoz
+spec:
+  deployment:
+    flavor: compose
+    mode: docker
+  signoz:
+    spec:
+      # Foundry wants the image tag without the leading 'v', e.g. 0.131.1.
+      version: "${SIGNOZ_VERSION_NO_V}"
+      env:
+        SIGNOZ_USER_ROOT_ENABLED: "true"
+        SIGNOZ_USER_ROOT_EMAIL: "admin@e2e.local"
+        # Password meets typical complexity: >=12 chars, upper+lower+digit+special.
+        SIGNOZ_USER_ROOT_PASSWORD: "E2eAdmin#42Local!"
+        SIGNOZ_USER_ROOT_ORG_NAME: "e2e"
+        # Fixed UUIDv7 so the e2e harness knows the orgId for /sessions/email_password
+        # (which requires it). Regenerate if you change versions and the format drifts.
+        SIGNOZ_USER_ROOT_ORG_ID: "01923b8a-b8a8-7e88-a06a-2c5d7a44a3e1"
