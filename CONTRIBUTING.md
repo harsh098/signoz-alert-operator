@@ -122,7 +122,6 @@ Areas where help is especially welcome:
 
 - **Helm chart.** The operator-sdk Helm plugin scaffolds one with `operator-sdk edit --plugins=helm/v1-alpha`.
 - **Per-Endpoint rate limiter.** A mass `kubectl apply` of many Alerts currently bursts SigNoz with parallel requests; a token-bucket keyed by Endpoint URL would smooth that out.
-- **Drift detection.** Periodic `RequeueAfter` on happy-path Reconcile so UI-side deletions/edits are caught in minutes rather than the controller-runtime default ~10h cache resync.
 - **`observedGeneration` on Status.** Avoid no-op PUTs to SigNoz when the K8s spec hasn't changed since the last successful reconcile.
 - **Dashboard CRD.** The `/api/v1/dashboards` endpoints are already in the vendored spec; same controller pattern as `Alert` (POST/PUT/DELETE, finalizer cleanup, `k8s_id` label).
 - **More e2e scenarios.** SigNoz 4xx/5xx error paths, multi-Endpoint reconciliation, adoption after a partial cluster migration.
